@@ -1,2 +1,0 @@
-# centrorum
-Capstone for UPRM
