@@ -1,4 +1,7 @@
-from rest_framework import viewsets, filters, permissions
+from rest_framework import viewsets, filters, permissions, generics
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework import status
 from .models import Organization, Listing, RSVP
 from .serializers import OrganizationSerializer, ListingSerializer, RSVPSerializer
 
@@ -26,3 +29,28 @@ class RSVPViewSet(viewsets.ModelViewSet):
     queryset = RSVP.objects.all()
     serializer_class = RSVPSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def create_post(request):
+    """Create a new post (which is a listing of type 'post')"""
+    # Create a default organization for posts if it doesn't exist
+    default_org, created = Organization.objects.get_or_create(
+        name="Community Posts",
+        defaults={
+            'description': 'Community posts and discussions',
+            'owner': request.user
+        }
+    )
+    
+    # Create the listing as a post
+    listing = Listing.objects.create(
+        org=default_org,
+        type='post',
+        title=request.data.get('title', 'Post'),
+        description=request.data.get('content', ''),
+        created_by=request.user
+    )
+    
+    serializer = ListingSerializer(listing)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)

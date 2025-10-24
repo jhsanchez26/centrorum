@@ -2,13 +2,15 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
-export default function Login() {
+export default function Signup() {
   const [email, setEmail] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   
-  const { login } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   async function onSubmit(e: React.FormEvent) {
@@ -17,7 +19,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      await login(email, password);
+      await register(email, displayName, password, passwordConfirm);
       navigate("/");
     } catch (err: any) {
       setError(err.message);
@@ -44,7 +46,7 @@ export default function Login() {
         borderRadius: 8,
         backgroundColor: "#f9f9f9"
       }}>
-        <h2 style={{ textAlign: "center", margin: "0 0 16px 0" }}>Sign In</h2>
+        <h2 style={{ textAlign: "center", margin: "0 0 16px 0" }}>Sign Up</h2>
         
         {error && (
           <div style={{
@@ -60,7 +62,7 @@ export default function Login() {
 
         <div>
           <label style={{ display: "block", marginBottom: 4, fontWeight: "bold" }}>
-            Email
+            Email (must be @upr.edu)
           </label>
           <input
             type="email"
@@ -80,13 +82,54 @@ export default function Login() {
 
         <div>
           <label style={{ display: "block", marginBottom: 4, fontWeight: "bold" }}>
+            Display Name
+          </label>
+          <input
+            type="text"
+            placeholder="Your Name"
+            value={displayName}
+            onChange={e => setDisplayName(e.target.value)}
+            required
+            style={{
+              width: "100%",
+              padding: 8,
+              border: "1px solid #ccc",
+              borderRadius: 4,
+              fontSize: 16
+            }}
+          />
+        </div>
+
+        <div>
+          <label style={{ display: "block", marginBottom: 4, fontWeight: "bold" }}>
             Password
           </label>
           <input
             type="password"
-            placeholder="Password"
+            placeholder="Password (min 8 characters)"
             value={password}
             onChange={e => setPassword(e.target.value)}
+            required
+            minLength={8}
+            style={{
+              width: "100%",
+              padding: 8,
+              border: "1px solid #ccc",
+              borderRadius: 4,
+              fontSize: 16
+            }}
+          />
+        </div>
+
+        <div>
+          <label style={{ display: "block", marginBottom: 4, fontWeight: "bold" }}>
+            Confirm Password
+          </label>
+          <input
+            type="password"
+            placeholder="Confirm Password"
+            value={passwordConfirm}
+            onChange={e => setPasswordConfirm(e.target.value)}
             required
             style={{
               width: "100%",
@@ -111,13 +154,13 @@ export default function Login() {
             cursor: loading ? "not-allowed" : "pointer"
           }}
         >
-          {loading ? "Signing In..." : "Sign In"}
+          {loading ? "Creating Account..." : "Sign Up"}
         </button>
 
         <div style={{ textAlign: "center", marginTop: 8 }}>
-          <span style={{ color: "#666" }}>Don't have an account? </span>
-          <Link to="/signup" style={{ color: "#007bff", textDecoration: "none" }}>
-            Sign Up
+          <span style={{ color: "#666" }}>Already have an account? </span>
+          <Link to="/login" style={{ color: "#007bff", textDecoration: "none" }}>
+            Sign In
           </Link>
         </div>
       </form>

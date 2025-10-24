@@ -8,7 +8,7 @@ class Organization(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 class Listing(models.Model):
-    LISTING_TYPES = [("event","Event"),("tutor","Tutoring"),("job","Job"),("resource","Resource")]
+    LISTING_TYPES = [("event","Event"),("tutor","Tutoring"),("job","Job"),("resource","Resource"),("post","Post")]
     org = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="listings")
     type = models.CharField(max_length=16, choices=LISTING_TYPES)
     title = models.CharField(max_length=160)
@@ -42,3 +42,4 @@ class Report(models.Model):
     reason = models.CharField(max_length=160)
     details = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
