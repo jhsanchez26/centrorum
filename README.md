@@ -1,13 +1,19 @@
-# Installation & Setup
+# CentroRUM Capstone Project
 
-## 1. Clone the Repository
+## Documentation
+
+- [CentroRum Capstone Documentation (Google Doc)](https://docs.google.com/document/d/1_20_PFv7aWkBG71SOGTDo1MJX6dtkQPJAxAFXWvXKyU/edit?usp=sharing)
+
+## Installation & Setup
+
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/jhsanchez26/centrorum.git
 cd centrorum
 ```
 
-## 2. Backend Setup
+### 2. Backend Setup
 
 ```bash
 cd backend
@@ -31,7 +37,7 @@ python manage.py runserver
 
 The backend will be available at `http://localhost:8000`
 
-## 3. Frontend Setup
+### 3. Frontend Setup
 
 ```bash
 cd frontend
@@ -43,7 +49,7 @@ npm run dev
 
 The frontend will be available at `http://localhost:5173`
 
-## 4. Running the Application
+### 4. Running the Application
 
 1. **Start Application**:
    '''docker compose up --build'''
