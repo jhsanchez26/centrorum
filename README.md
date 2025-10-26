@@ -14,6 +14,9 @@ cd backend
 python -m venv venv
 
 # On Windows:
+# you may need to do this additional first step if PowerShell gives you trouble:
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+# If you have no issues, only run:
 venv\Scripts\activate
 # On macOS/Linux:
 source venv/bin/activate
