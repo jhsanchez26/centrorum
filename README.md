@@ -1,13 +1,13 @@
-## Installation & Setup
+# Installation & Setup
 
-### 1. Clone the Repository
+## 1. Clone the Repository
 
 ```bash
 git clone https://github.com/jhsanchez26/centrorum.git
 cd centrorum
 ```
 
-### 2. Backend Setup
+## 2. Backend Setup
 
 ```bash
 cd backend
@@ -31,7 +31,7 @@ python manage.py runserver
 
 The backend will be available at `http://localhost:8000`
 
-### 3. Frontend Setup
+## 3. Frontend Setup
 
 ```bash
 cd frontend
@@ -43,10 +43,10 @@ npm run dev
 
 The frontend will be available at `http://localhost:5173`
 
-### 4. Running the Application
+## 4. Running the Application
 
 1. **Start Application**:
    '''docker compose up --build'''
 
 2. **Access the Application**:
-   - Frontend: http://localhost:5173
+   - Frontend: <http://localhost:5173>
