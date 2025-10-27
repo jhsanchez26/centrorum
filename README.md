@@ -1,3 +1,9 @@
+# CentroRUM Capstone Project
+
+## Documentation
+
+- [CentroRum Capstone Documentation (Google Doc)](https://docs.google.com/document/d/1_20_PFv7aWkBG71SOGTDo1MJX6dtkQPJAxAFXWvXKyU/edit?usp=sharing)
+
 ## Installation & Setup
 
 ### 1. Clone the Repository
@@ -14,6 +20,9 @@ cd backend
 python -m venv venv
 
 # On Windows:
+# you may need to do this additional first step if PowerShell gives you trouble:
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+# If you have no issues, only run:
 venv\Scripts\activate
 # On macOS/Linux:
 source venv/bin/activate
