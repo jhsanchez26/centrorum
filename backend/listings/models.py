@@ -26,9 +26,14 @@ class Listing(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 class RSVP(models.Model):
+    STATUS_CHOICES = [
+        ("going", "Going"),
+        ("interested", "Interested"), 
+        ("not_going", "Not Going")
+    ]
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="rsvps")
-    status = models.CharField(max_length=16, default="going")  # going/interested
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default="going")
     created_at = models.DateTimeField(auto_now_add=True)
 
 class Follow(models.Model):

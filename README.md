@@ -43,7 +43,9 @@ The frontend will be available at `http://localhost:5173`
 ### 4. Running the Application
 
 1. **Start Application**:
-   '''docker compose up --build'''
+   '''
+   docker compose up --build
+   '''
 
 2. **Access the Application**:
-   - Frontend: http://localhost:5173
+   - Frontend: 'http://localhost:5173'
