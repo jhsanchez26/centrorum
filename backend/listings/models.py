@@ -7,6 +7,9 @@ class Organization(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orgs")
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.name
+
 class Listing(models.Model):
     LISTING_TYPES = [("event","Event"),("tutor","Tutoring"),("job","Job"),("resource","Resource"),("post","Post")]
     org = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="listings")
@@ -25,6 +28,9 @@ class Listing(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="created_listings")
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.title
+
 class RSVP(models.Model):
     STATUS_CHOICES = [
         ("going", "Going"),
@@ -36,10 +42,16 @@ class RSVP(models.Model):
     status = models.CharField(max_length=16, choices=STATUS_CHOICES, default="going")
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"{self.user.display_name} - {self.listing.title} ({self.status})"
+
 class Follow(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     org = models.ForeignKey(Organization, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.display_name} follows {self.org.name}"
 
 class Report(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
@@ -47,4 +59,7 @@ class Report(models.Model):
     reason = models.CharField(max_length=160)
     details = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Report by {self.user.display_name if self.user else 'Anonymous'} for {self.listing.title}"
 

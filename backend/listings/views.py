@@ -42,8 +42,27 @@ class RSVPViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['listing', 'user']
     
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    def create(self, request, *args, **kwargs):
+        # Check if RSVP already exists for this user and listing
+        listing_id = request.data.get('listing')
+        user = request.user
+        
+        if listing_id:
+            existing_rsvp = RSVP.objects.filter(user=user, listing_id=listing_id).first()
+            if existing_rsvp:
+                # Update existing RSVP instead of creating new one
+                serializer = self.get_serializer(existing_rsvp, data=request.data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_200_OK)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Create new RSVP
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def get_queryset(self):
         # For listing-based queries, return all RSVPs for that listing

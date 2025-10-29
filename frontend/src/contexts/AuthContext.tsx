@@ -57,6 +57,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const login = async (email: string, password: string) => {
+    setLoading(true);
     try {
       const response = await api.post('/auth/login/', { email, password });
       const { access, user: userData } = response.data;
@@ -65,11 +66,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setToken(access);
       setUser(userData);
     } catch (error: any) {
+      setLoading(false);
       throw new Error(error.response?.data?.error || 'Login failed');
+    } finally {
+      setLoading(false);
     }
   };
 
   const register = async (email: string, displayName: string, password: string, passwordConfirm: string) => {
+    setLoading(true);
     try {
       const response = await api.post('/auth/register/', {
         email,
@@ -83,6 +88,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setToken(access);
       setUser(userData);
     } catch (error: any) {
+      setLoading(false);
       const errorData = error.response?.data;
       if (errorData?.email) {
         throw new Error(errorData.email[0]);
@@ -93,6 +99,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } else {
         throw new Error('Registration failed');
       }
+    } finally {
+      setLoading(false);
     }
   };
 

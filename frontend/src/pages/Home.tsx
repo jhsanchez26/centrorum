@@ -24,7 +24,7 @@ export default function Home() {
           lineHeight: "1.6",
           marginBottom: "24px"
         }}>
-          This is the home page of your app. Use the nav bar to browse listings or log in.
+          Use the navigation bar to browse listings or log in.
         </p>
         
         <div style={{
@@ -40,14 +40,14 @@ export default function Home() {
             fontWeight: "600",
             marginBottom: "16px"
           }}>
-            Get Started
+            About Us
           </h2>
           <p style={{
             color: "#4a5568",
             fontSize: "16px",
             lineHeight: "1.6"
           }}>
-            CentroRUM is your central hub for university life. Browse events, find tutoring opportunities, 
+            CentroRUM is your central hub for university life in UPRM. Browse events, find tutoring opportunities, 
             discover job postings, and connect with your community.
           </p>
         </div>

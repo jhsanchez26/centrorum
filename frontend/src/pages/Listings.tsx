@@ -62,7 +62,7 @@ export default function Listings() {
       if (sortBy) params.append('ordering', sortOrder === 'desc' ? `-${sortBy}` : sortBy);
       
       const response = await api.get(`/listings/?${params.toString()}`);
-      setAllListings(response.data);
+      setAllListings(response.data.results || response.data);
     } catch (err: any) {
       setError("Failed to load listings");
     } finally {
@@ -622,7 +622,7 @@ export default function Listings() {
       <div>
         {loading ? (
           <p>Loading listings...</p>
-        ) : allListings.length === 0 ? (
+        ) : !Array.isArray(allListings) || allListings.length === 0 ? (
           <div style={{ textAlign: "center", padding: 40, color: "#666" }}>
             <p>No listings yet. Be the first to share something!</p>
           </div>
@@ -648,12 +648,12 @@ export default function Listings() {
                 marginBottom: 12
               }}>
                 <div>
-                  <strong style={{ color: "#1a202c", fontSize: "16px", fontWeight: "600" }}>{listing.created_by.display_name}</strong>
+                  <strong style={{ color: "#1a202c", fontSize: "16px", fontWeight: "600" }}>{listing.created_by?.display_name || 'Unknown User'}</strong>
                   <div style={{ color: "#666", fontSize: "14px" }}>
                     {formatDate(listing.created_at)}
                   </div>
                 </div>
-                {user?.id === listing.created_by.id && (
+                {user?.id === listing.created_by?.id && (
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{
                       backgroundColor: "#e3f2fd",

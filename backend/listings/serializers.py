@@ -36,4 +36,7 @@ class ListingSerializer(serializers.ModelSerializer):
         read_only_fields = ("created_at", "archived_at")
 
 class RSVPSerializer(serializers.ModelSerializer):
-    class Meta: model = RSVP; fields = "__all__"; read_only_fields=("created_at",)
+    class Meta: 
+        model = RSVP
+        fields = "__all__"
+        read_only_fields = ("created_at", "user")
