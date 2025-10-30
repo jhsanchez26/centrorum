@@ -188,9 +188,10 @@ All members contribute to design, documentation, testing, and final presentation
 ## 📜 License
 
 This project was developed for educational purposes as part of the
-**University of Puerto Rico at Mayagüez Capstone Course (INSO/CCIC 4151)**.
+**University of Puerto Rico at Mayagüez Capstone Course (INSO/CIIC 4151)**.
 
 © 2025 CentroRUM Team — All Rights Reserved.
+
 
 
 
