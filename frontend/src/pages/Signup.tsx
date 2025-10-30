@@ -102,8 +102,8 @@ export default function Signup() {
               boxSizing: "border-box"
             }}
             onFocus={(e) => {
-              e.target.style.borderColor = "#3182ce";
-              e.target.style.boxShadow = "0 0 0 3px rgba(49, 130, 206, 0.1)";
+                e.target.style.borderColor = "#006729";
+                e.target.style.boxShadow = "0 0 0 3px rgba(0, 103, 41, 0.1)";
             }}
             onBlur={(e) => {
               e.target.style.borderColor = "#e2e8f0";
@@ -142,8 +142,8 @@ export default function Signup() {
               boxSizing: "border-box"
             }}
             onFocus={(e) => {
-              e.target.style.borderColor = "#3182ce";
-              e.target.style.boxShadow = "0 0 0 3px rgba(49, 130, 206, 0.1)";
+                e.target.style.borderColor = "#006729";
+                e.target.style.boxShadow = "0 0 0 3px rgba(0, 103, 41, 0.1)";
             }}
             onBlur={(e) => {
               e.target.style.borderColor = "#e2e8f0";
@@ -183,8 +183,8 @@ export default function Signup() {
               boxSizing: "border-box"
             }}
             onFocus={(e) => {
-              e.target.style.borderColor = "#3182ce";
-              e.target.style.boxShadow = "0 0 0 3px rgba(49, 130, 206, 0.1)";
+                e.target.style.borderColor = "#006729";
+                e.target.style.boxShadow = "0 0 0 3px rgba(0, 103, 41, 0.1)";
             }}
             onBlur={(e) => {
               e.target.style.borderColor = "#e2e8f0";
@@ -223,8 +223,8 @@ export default function Signup() {
               boxSizing: "border-box"
             }}
             onFocus={(e) => {
-              e.target.style.borderColor = "#3182ce";
-              e.target.style.boxShadow = "0 0 0 3px rgba(49, 130, 206, 0.1)";
+                e.target.style.borderColor = "#006729";
+                e.target.style.boxShadow = "0 0 0 3px rgba(0, 103, 41, 0.1)";
             }}
             onBlur={(e) => {
               e.target.style.borderColor = "#e2e8f0";
@@ -238,7 +238,7 @@ export default function Signup() {
           disabled={loading}
           style={{
             padding: "12px 16px",
-            backgroundColor: loading ? "#a0aec0" : "#3182ce",
+            backgroundColor: loading ? "#a0aec0" : "#006729",
             color: "white",
             border: "none",
             borderRadius: 8,
@@ -251,14 +251,14 @@ export default function Signup() {
           }}
           onMouseEnter={(e) => {
             if (!loading) {
-              (e.target as HTMLButtonElement).style.backgroundColor = "#2c5282";
+              (e.target as HTMLButtonElement).style.backgroundColor = "#004d20";
               (e.target as HTMLButtonElement).style.transform = "translateY(-1px)";
               (e.target as HTMLButtonElement).style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
             }
           }}
           onMouseLeave={(e) => {
             if (!loading) {
-              (e.target as HTMLButtonElement).style.backgroundColor = "#3182ce";
+              (e.target as HTMLButtonElement).style.backgroundColor = "#006729";
               (e.target as HTMLButtonElement).style.transform = "translateY(0)";
               (e.target as HTMLButtonElement).style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
             }
@@ -270,7 +270,7 @@ export default function Signup() {
         <div style={{ textAlign: "center", marginTop: 8 }}>
           <span style={{ color: "#718096", fontSize: "14px" }}>Already have an account? </span>
           <Link to="/login" style={{ 
-            color: "#3182ce", 
+            color: "#006729", 
             textDecoration: "none",
             fontWeight: "600",
             fontSize: "14px"

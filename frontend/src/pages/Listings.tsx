@@ -221,8 +221,8 @@ export default function Listings() {
                 boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = "#3182ce";
-                e.target.style.boxShadow = "0 0 0 3px rgba(49, 130, 206, 0.1)";
+                e.target.style.borderColor = "#006729";
+                e.target.style.boxShadow = "0 0 0 3px rgba(0, 103, 41, 0.1)";
               }}
               onBlur={(e) => {
                 e.target.style.borderColor = "#e2e8f0";
@@ -252,8 +252,8 @@ export default function Listings() {
                 transition: "all 0.2s ease"
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = "#3182ce";
-                e.target.style.boxShadow = "0 0 0 3px rgba(49, 130, 206, 0.1)";
+                e.target.style.borderColor = "#006729";
+                e.target.style.boxShadow = "0 0 0 3px rgba(0, 103, 41, 0.1)";
               }}
               onBlur={(e) => {
                 e.target.style.borderColor = "#e1e5e9";
@@ -288,8 +288,8 @@ export default function Listings() {
                 transition: "all 0.2s ease"
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = "#3182ce";
-                e.target.style.boxShadow = "0 0 0 3px rgba(49, 130, 206, 0.1)";
+                e.target.style.borderColor = "#006729";
+                e.target.style.boxShadow = "0 0 0 3px rgba(0, 103, 41, 0.1)";
               }}
               onBlur={(e) => {
                 e.target.style.borderColor = "#e1e5e9";
@@ -326,8 +326,8 @@ export default function Listings() {
                 transition: "all 0.2s ease"
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = "#3182ce";
-                e.target.style.boxShadow = "0 0 0 3px rgba(49, 130, 206, 0.1)";
+                e.target.style.borderColor = "#006729";
+                e.target.style.boxShadow = "0 0 0 3px rgba(0, 103, 41, 0.1)";
               }}
               onBlur={(e) => {
                 e.target.style.borderColor = "#e1e5e9";
@@ -440,8 +440,8 @@ export default function Listings() {
                 boxSizing: "border-box"
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = "#3182ce";
-                e.target.style.boxShadow = "0 0 0 3px rgba(49, 130, 206, 0.1)";
+                e.target.style.borderColor = "#006729";
+                e.target.style.boxShadow = "0 0 0 3px rgba(0, 103, 41, 0.1)";
               }}
               onBlur={(e) => {
                 e.target.style.borderColor = "#e2e8f0";
@@ -471,8 +471,8 @@ export default function Listings() {
                   boxSizing: "border-box"
                 }}
                 onFocus={(e) => {
-                  e.target.style.borderColor = "#3182ce";
-                  e.target.style.boxShadow = "0 0 0 3px rgba(49, 130, 206, 0.1)";
+                  e.target.style.borderColor = "#006729";
+                  e.target.style.boxShadow = "0 0 0 3px rgba(0, 103, 41, 0.1)";
                 }}
                 onBlur={(e) => {
                   e.target.style.borderColor = "#e2e8f0";
@@ -506,8 +506,8 @@ export default function Listings() {
                   boxSizing: "border-box"
                 }}
                 onFocus={(e) => {
-                  e.target.style.borderColor = "#3182ce";
-                  e.target.style.boxShadow = "0 0 0 3px rgba(49, 130, 206, 0.1)";
+                  e.target.style.borderColor = "#006729";
+                  e.target.style.boxShadow = "0 0 0 3px rgba(0, 103, 41, 0.1)";
                 }}
                 onBlur={(e) => {
                   e.target.style.borderColor = "#e2e8f0";
@@ -543,8 +543,8 @@ export default function Listings() {
               boxSizing: "border-box"
             }}
             onFocus={(e) => {
-              e.target.style.borderColor = "#3182ce";
-              e.target.style.boxShadow = "0 0 0 3px rgba(49, 130, 206, 0.1)";
+              e.target.style.borderColor = "#006729";
+              e.target.style.boxShadow = "0 0 0 3px rgba(0, 103, 41, 0.1)";
             }}
             onBlur={(e) => {
               e.target.style.borderColor = "#e2e8f0";
@@ -587,7 +587,7 @@ export default function Listings() {
               disabled={submitting || !newPost.trim() || !postTitle.trim()}
               style={{
                 padding: "12px 24px",
-                backgroundColor: submitting ? "#a0aec0" : "#3182ce",
+                backgroundColor: submitting ? "#a0aec0" : "#006729",
                 color: "white",
                 border: "none",
                 borderRadius: 8,
@@ -599,14 +599,14 @@ export default function Listings() {
               }}
               onMouseEnter={(e) => {
                 if (!submitting && newPost.trim() && postTitle.trim()) {
-                  (e.target as HTMLButtonElement).style.backgroundColor = "#2c5282";
+                  (e.target as HTMLButtonElement).style.backgroundColor = "#004d20";
                   (e.target as HTMLButtonElement).style.transform = "translateY(-1px)";
                   (e.target as HTMLButtonElement).style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
                 }
               }}
               onMouseLeave={(e) => {
                 if (!submitting && newPost.trim() && postTitle.trim()) {
-                  (e.target as HTMLButtonElement).style.backgroundColor = "#3182ce";
+                  (e.target as HTMLButtonElement).style.backgroundColor = "#006729";
                   (e.target as HTMLButtonElement).style.transform = "translateY(0)";
                   (e.target as HTMLButtonElement).style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
                 }
@@ -656,8 +656,8 @@ export default function Listings() {
                 {user?.id === listing.created_by?.id && (
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{
-                      backgroundColor: "#e3f2fd",
-                      color: "#1976d2",
+                      backgroundColor: "#d1fae5",
+                      color: "#006729",
                       padding: "2px 8px",
                       borderRadius: 12,
                       fontSize: "12px"

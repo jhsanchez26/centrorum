@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import Listings from "./pages/Listings";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import logo from "./assets/img/RUM.png";
 
 function Header() {
   const { user, logout } = useAuth();
@@ -20,12 +21,16 @@ function Header() {
       boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
     }}>
       <Link to="/" style={{ 
-        fontWeight: "700", 
-        fontSize: "20px", 
+        display: "flex", 
+        alignItems: "center", 
+        gap: 8,
         textDecoration: "none", 
         color: "#1a202c" 
       }}>
-        CentroRUM
+        <img src={logo} alt="CentroRUM Logo" style={{ height: "32px" }} />
+        <span style={{ fontWeight: "700", fontSize: "20px" }}>
+          CentroRUM
+        </span>
       </Link>
       <Link to="/listings" style={{ 
         textDecoration: "none", 
@@ -43,7 +48,7 @@ function Header() {
             onClick={logout}
             style={{
               padding: "8px 16px",
-              backgroundColor: "#e53e3e",
+              backgroundColor: "#006729",
               color: "white",
               border: "none",
               borderRadius: "8px",
@@ -72,7 +77,7 @@ function Header() {
           <Link to="/login" style={{ 
             marginLeft: "auto", 
             textDecoration: "none", 
-            color: "#3182ce",
+            color: "#006729",
             fontWeight: "600",
             fontSize: "14px"
           }}>
@@ -80,7 +85,7 @@ function Header() {
           </Link>
           <Link to="/signup" style={{ 
             textDecoration: "none", 
-            color: "#3182ce",
+            color: "#006729",
             fontWeight: "600",
             fontSize: "14px"
           }}>
