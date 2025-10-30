@@ -1,3 +1,4 @@
+
 ---
 
 # 🏫 CentroRUM — UPRM Capstone Project
@@ -191,6 +192,7 @@ This project was developed for educational purposes as part of the
 **University of Puerto Rico at Mayagüez Capstone Course (INSO/CIIC 4151)**.
 
 © 2025 CentroRUM Team — All Rights Reserved.
+
 
 
 
