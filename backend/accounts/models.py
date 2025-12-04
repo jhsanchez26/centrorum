@@ -31,6 +31,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     # core profile
     display_name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
+    bio = models.TextField(blank=True, max_length=500)
 
     # Django admin / permissions plumbing
     is_active = models.BooleanField(default=True)
@@ -44,3 +45,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.display_name
+    
+    def get_encrypted_id(self):
+        """Get an encrypted version of the user ID for use in URLs"""
+        from .utils import encrypt_user_id
+        return encrypt_user_id(self.id)

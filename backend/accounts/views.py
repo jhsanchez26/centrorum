@@ -4,8 +4,12 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
+from django.shortcuts import get_object_or_404
 from .models import User
 from .serializers import UserRegistrationSerializer, UserSerializer
+from .utils import decrypt_user_id
+from listings.serializers import ListingSerializer
+from listings.models import Listing
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -62,3 +66,33 @@ def login(request):
             {'error': 'Invalid credentials'}, 
             status=status.HTTP_401_UNAUTHORIZED
         )
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def user_profile(request, user_id):
+    """Get user profile with all their posts"""
+    # Try to decrypt the user_id (in case it's encrypted)
+    # If decryption fails, try using it as a regular ID for backward compatibility
+    decrypted_id = decrypt_user_id(user_id)
+    if decrypted_id is not None:
+        user = get_object_or_404(User, id=decrypted_id)
+    else:
+        # Try as regular ID for backward compatibility
+        try:
+            user = get_object_or_404(User, id=int(user_id))
+        except (ValueError, TypeError):
+            return Response(
+                {'error': 'Invalid user ID'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
+    user_data = UserSerializer(user).data
+    
+    # Get all listings created by this user
+    listings = Listing.objects.filter(created_by=user).order_by('-created_at')
+    listings_data = ListingSerializer(listings, many=True, context={'request': request}).data
+    
+    return Response({
+        'user': user_data,
+        'posts': listings_data
+    })

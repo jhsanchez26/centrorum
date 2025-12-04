@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import Listings from "./pages/Listings";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Profile from "./pages/Profile";
 import logo from "./assets/img/RUM.png";
 
 function Header() {
@@ -41,7 +42,17 @@ function Header() {
       </Link>
       {user ? (
         <>
-          <span style={{ marginLeft: "auto", color: "#4a5568", fontWeight: "500" }}>
+          <Link to="/profile/me" style={{ 
+            marginLeft: "auto",
+            textDecoration: "none", 
+            color: "#006729",
+            fontWeight: "600",
+            fontSize: "14px",
+            marginRight: "12px"
+          }}>
+            My Profile
+          </Link>
+          <span style={{ color: "#4a5568", fontWeight: "500" }}>
             Welcome, {user.display_name}!
           </span>
           <button 
@@ -56,7 +67,8 @@ function Header() {
               fontWeight: "600",
               fontSize: "14px",
               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              transition: "all 0.2s ease"
+              transition: "all 0.2s ease",
+              marginLeft: "12px"
             }}
             onMouseEnter={(e) => {
               (e.target as HTMLButtonElement).style.backgroundColor = "#c53030";
@@ -64,7 +76,7 @@ function Header() {
               (e.target as HTMLButtonElement).style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
             }}
             onMouseLeave={(e) => {
-              (e.target as HTMLButtonElement).style.backgroundColor = "#e53e3e";
+              (e.target as HTMLButtonElement).style.backgroundColor = "#006729";
               (e.target as HTMLButtonElement).style.transform = "translateY(0)";
               (e.target as HTMLButtonElement).style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
             }}
@@ -107,6 +119,11 @@ function AppContent() {
           <Route path="/listings" element={
             <ProtectedRoute>
               <Listings/>
+            </ProtectedRoute>
+          }/>
+          <Route path="/profile/:userId" element={
+            <ProtectedRoute>
+              <Profile/>
             </ProtectedRoute>
           }/>
           <Route path="/login" element={<Login/>}/>

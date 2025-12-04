@@ -21,7 +21,20 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return user
 
 class UserSerializer(serializers.ModelSerializer):
+    bio = serializers.CharField(required=False, allow_blank=True, default='')
+    encrypted_id = serializers.SerializerMethodField()
+    
     class Meta:
         model = User
-        fields = ('id', 'email', 'display_name', 'date_joined')
+        fields = ('id', 'encrypted_id', 'email', 'display_name', 'bio', 'date_joined')
         read_only_fields = ('id', 'date_joined')
+    
+    def get_encrypted_id(self, obj):
+        """Get the encrypted user ID"""
+        return obj.get_encrypted_id()
+    
+    def to_representation(self, instance):
+        """Ensure bio is always returned as a string, never null"""
+        representation = super().to_representation(instance)
+        representation['bio'] = representation.get('bio') or ''
+        return representation

@@ -3,8 +3,10 @@ import { api, setToken } from '../lib/api';
 
 interface User {
   id: number;
+  encrypted_id?: string;
   email: string;
   display_name: string;
+  bio?: string;
   date_joined: string;
 }
 
@@ -13,6 +15,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, displayName: string, password: string, passwordConfirm: string) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   loading: boolean;
 }
 
@@ -41,7 +44,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Verify token and get user info
       api.get('/auth/profile/')
         .then(response => {
-          setUser(response.data);
+          const userData = response.data;
+          // Normalize bio to always be a string (empty string if null/undefined)
+          setUser({
+            ...userData,
+            bio: userData.bio || ''
+          });
         })
         .catch(() => {
           // Token is invalid, clear it
@@ -64,7 +72,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       localStorage.setItem('token', access);
       setToken(access);
-      setUser(userData);
+      // Normalize bio to always be a string (empty string if null/undefined)
+      setUser({
+        ...userData,
+        bio: userData.bio || ''
+      });
     } catch (error: any) {
       setLoading(false);
       throw new Error(error.response?.data?.error || 'Login failed');
@@ -86,7 +98,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       localStorage.setItem('token', access);
       setToken(access);
-      setUser(userData);
+      // Normalize bio to always be a string (empty string if null/undefined)
+      setUser({
+        ...userData,
+        bio: userData.bio || ''
+      });
     } catch (error: any) {
       setLoading(false);
       const errorData = error.response?.data;
@@ -110,11 +126,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    try {
+      const response = await api.get('/auth/profile/');
+      const userData = response.data;
+      // Normalize bio to always be a string (empty string if null/undefined)
+      setUser({
+        ...userData,
+        bio: userData.bio || ''
+      });
+    } catch (error) {
+      // If refresh fails, user might not be authenticated
+      console.error('Failed to refresh user data');
+    }
+  };
+
   const value = {
     user,
     login,
     register,
     logout,
+    refreshUser,
     loading
   };
 

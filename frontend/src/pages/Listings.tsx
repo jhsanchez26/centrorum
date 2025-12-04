@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -17,6 +18,7 @@ type Listing = {
   user_rsvp_status: string | null;
   created_by: {
     id: number;
+    encrypted_id?: string;
     display_name: string;
   };
   created_at: string;
@@ -648,7 +650,29 @@ export default function Listings() {
                 marginBottom: 12
               }}>
                 <div>
-                  <strong style={{ color: "#1a202c", fontSize: "16px", fontWeight: "600" }}>{listing.created_by?.display_name || 'Unknown User'}</strong>
+                  {listing.created_by?.id ? (
+                    <Link 
+                      to={`/profile/${listing.created_by.encrypted_id || listing.created_by.id}`}
+                      style={{ 
+                        color: "#006729", 
+                        fontSize: "16px", 
+                        fontWeight: "600",
+                        textDecoration: "none"
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.textDecoration = "underline";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.textDecoration = "none";
+                      }}
+                    >
+                      {listing.created_by.display_name}
+                    </Link>
+                  ) : (
+                    <strong style={{ color: "#1a202c", fontSize: "16px", fontWeight: "600" }}>
+                      Unknown User
+                    </strong>
+                  )}
                   <div style={{ color: "#666", fontSize: "14px" }}>
                     {formatDate(listing.created_at)}
                   </div>
