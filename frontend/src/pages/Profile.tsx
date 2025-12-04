@@ -25,6 +25,7 @@ type Listing = {
 
 type UserProfile = {
   id: number;
+  encrypted_id?: string;
   display_name: string;
   email: string;
   bio: string;
@@ -52,6 +53,9 @@ export default function Profile() {
   const [editPostType, setEditPostType] = useState("post");
   const [editPostModality, setEditPostModality] = useState("in-person");
   const [submitting, setSubmitting] = useState(false);
+  const [creatingRequest, setCreatingRequest] = useState(false);
+  const [showMessageDialog, setShowMessageDialog] = useState(false);
+  const [requestMessage, setRequestMessage] = useState("");
 
   const fetchProfileForUser = useCallback(async (targetUserId: string) => {
     try {
@@ -205,6 +209,79 @@ export default function Profile() {
     setEditPostModality("in-person");
   };
 
+  const handleStartConversation = async () => {
+    if (!profileData || !currentUser) return;
+    
+    try {
+      // First check if there's already a conversation
+      const conversationsResponse = await api.get("/auth/conversations/");
+      const conversations = conversationsResponse.data;
+      
+      const targetUserId = profileData.user.id;
+      const existingConversation = conversations.find((conv: any) => 
+        (conv.user1.id === targetUserId && conv.user2.id === currentUser.id) ||
+        (conv.user2.id === targetUserId && conv.user1.id === currentUser.id)
+      );
+      
+      if (existingConversation) {
+        // Navigate directly to the messaging page
+        navigate("/messaging");
+        return;
+      }
+      
+      // Check if there's already a pending request
+      const requestsResponse = await api.get("/auth/conversation-requests/");
+      const requests = requestsResponse.data;
+      const existingRequest = requests.find((req: any) => 
+        (req.requester.id === currentUser.id && req.recipient.id === targetUserId) ||
+        (req.recipient.id === currentUser.id && req.requester.id === targetUserId)
+      );
+      
+      if (existingRequest && existingRequest.status === 'pending') {
+        if (existingRequest.requester.id === currentUser.id) {
+          setError("You already have a pending request with this user");
+          setTimeout(() => setError(""), 5000);
+        } else {
+          setError("This user already sent you a request. Check your Messages.");
+          setTimeout(() => setError(""), 5000);
+        }
+        return;
+      }
+      
+      // Show message dialog
+      setShowMessageDialog(true);
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || "Failed to check conversations";
+      setError(errorMessage);
+      setTimeout(() => setError(""), 5000);
+    }
+  };
+
+  const handleSendConversationRequest = async () => {
+    if (!profileData) return;
+    
+    try {
+      setCreatingRequest(true);
+      const userId = profileData.user.encrypted_id || profileData.user.id.toString();
+      await api.post("/auth/conversation-requests/create/", {
+        recipient_id: userId,
+        message: requestMessage.trim(),
+      });
+      
+      // Show success message and navigate to messaging
+      setShowMessageDialog(false);
+      setRequestMessage("");
+      alert("Conversation request sent! You can view it in your Messages.");
+      navigate("/messaging");
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || "Failed to send conversation request";
+      setError(errorMessage);
+      setTimeout(() => setError(""), 5000);
+    } finally {
+      setCreatingRequest(false);
+    }
+  };
+
   const isOwnProfile = currentUser && profileData && currentUser.id === profileData.user.id;
 
   const formatDate = (dateString: string) => {
@@ -281,6 +358,119 @@ export default function Profile() {
           marginBottom: 16
         }}>
           {error}
+        </div>
+      )}
+
+      {/* Message Dialog */}
+      {showMessageDialog && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000
+        }}
+        onClick={() => {
+          if (!creatingRequest) {
+            setShowMessageDialog(false);
+            setRequestMessage("");
+          }
+        }}
+        >
+          <div style={{
+            backgroundColor: "white",
+            borderRadius: 12,
+            padding: 24,
+            maxWidth: "500px",
+            width: "90%",
+            maxHeight: "80vh",
+            overflowY: "auto"
+          }}
+          onClick={(e) => e.stopPropagation()}
+          >
+            <h2 style={{
+              margin: "0 0 16px 0",
+              color: "#1a202c",
+              fontSize: "20px",
+              fontWeight: "600"
+            }}>
+              Send Conversation Request
+            </h2>
+            <p style={{
+              margin: "0 0 16px 0",
+              color: "#666",
+              fontSize: "14px"
+            }}>
+              Add an optional message to let {user.display_name} know why you'd like to connect:
+            </p>
+            <textarea
+              value={requestMessage}
+              onChange={(e) => setRequestMessage(e.target.value)}
+              placeholder="Optional message..."
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                border: "2px solid #e2e8f0",
+                borderRadius: 8,
+                fontSize: 14,
+                resize: "vertical",
+                minHeight: 100,
+                maxHeight: 200,
+                fontFamily: "inherit",
+                boxSizing: "border-box",
+                backgroundColor: "#f7fafc",
+                color: "#1a202c"
+              }}
+              rows={4}
+            />
+            <div style={{
+              display: "flex",
+              gap: 12,
+              marginTop: 20,
+              justifyContent: "flex-end"
+            }}>
+              <button
+                onClick={() => {
+                  setShowMessageDialog(false);
+                  setRequestMessage("");
+                }}
+                disabled={creatingRequest}
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#718096",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 8,
+                  cursor: creatingRequest ? "not-allowed" : "pointer",
+                  fontWeight: "600",
+                  fontSize: "14px"
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendConversationRequest}
+                disabled={creatingRequest}
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: creatingRequest ? "#a0aec0" : "#006729",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 8,
+                  cursor: creatingRequest ? "not-allowed" : "pointer",
+                  fontWeight: "600",
+                  fontSize: "14px"
+                }}
+              >
+                {creatingRequest ? "Sending..." : "Send Request"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -404,23 +594,43 @@ export default function Profile() {
                   Joined {formatDate(user.date_joined)}
                 </p>
               </div>
-              {isOwnProfile && (
-                <button
-                  onClick={() => setIsEditingProfile(true)}
-                  style={{
-                    padding: "8px 16px",
-                    backgroundColor: "#006729",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 8,
-                    cursor: "pointer",
-                    fontWeight: "600",
-                    fontSize: "14px"
-                  }}
-                >
-                  Edit Profile
-                </button>
-              )}
+              <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                {!isOwnProfile && (
+                  <button
+                    onClick={handleStartConversation}
+                    disabled={creatingRequest}
+                    style={{
+                      padding: "8px 16px",
+                      backgroundColor: creatingRequest ? "#a0aec0" : "#006729",
+                      color: "white",
+                      border: "none",
+                      borderRadius: 8,
+                      cursor: creatingRequest ? "not-allowed" : "pointer",
+                      fontWeight: "600",
+                      fontSize: "14px"
+                    }}
+                  >
+                    {creatingRequest ? "Sending..." : "Message"}
+                  </button>
+                )}
+                {isOwnProfile && (
+                  <button
+                    onClick={() => setIsEditingProfile(true)}
+                    style={{
+                      padding: "8px 16px",
+                      backgroundColor: "#006729",
+                      color: "white",
+                      border: "none",
+                      borderRadius: 8,
+                      cursor: "pointer",
+                      fontWeight: "600",
+                      fontSize: "14px"
+                    }}
+                  >
+                    Edit Profile
+                  </button>
+                )}
+              </div>
             </div>
             {user.bio ? (
               <p style={{ 

@@ -6,6 +6,7 @@ import Listings from "./pages/Listings";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Profile from "./pages/Profile";
+import Messaging from "./pages/Messaging";
 import logo from "./assets/img/RUM.png";
 
 function Header() {
@@ -42,6 +43,13 @@ function Header() {
       </Link>
       {user ? (
         <>
+          <Link to="/messaging" style={{ 
+            textDecoration: "none", 
+            color: "#2d3748",
+            fontWeight: "500"
+          }}>
+            Messages
+          </Link>
           <Link to="/profile/me" style={{ 
             marginLeft: "auto",
             textDecoration: "none", 
@@ -124,6 +132,11 @@ function AppContent() {
           <Route path="/profile/:userId" element={
             <ProtectedRoute>
               <Profile/>
+            </ProtectedRoute>
+          }/>
+          <Route path="/messaging" element={
+            <ProtectedRoute>
+              <Messaging/>
             </ProtectedRoute>
           }/>
           <Route path="/login" element={<Login/>}/>
