@@ -36,7 +36,6 @@ export default function Listings() {
   const [editingPost, setEditingPost] = useState<Listing | null>(null);
   const { user } = useAuth();
 
-  // Filter and search state
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [modalityFilter, setModalityFilter] = useState("");
@@ -47,7 +46,6 @@ export default function Listings() {
     fetchListings();
   }, []);
 
-  // Refetch listings when filters change
   useEffect(() => {
     if (!loading) {
       fetchListings();
@@ -79,7 +77,6 @@ export default function Listings() {
     setSubmitting(true);
     try {
       if (editingPost) {
-        // Update existing post
         const response = await api.put(`/listings/${editingPost.id}/`, {
           title: postTitle,
           description: newPost,
@@ -92,7 +89,6 @@ export default function Listings() {
         ));
         setEditingPost(null);
       } else {
-        // Create new post
         const response = await api.post("/posts/", { 
           title: postTitle,
           content: newPost,
@@ -147,12 +143,10 @@ export default function Listings() {
         status: status
       });
       
-      // Update the specific listing in our state instead of refetching all
       setAllListings(allListings.map(listing => 
         listing.id === listingId ? response.data : listing
       ));
     } catch (err: any) {
-      console.error("RSVP Error:", err);
       setError("Failed to update RSVP");
     }
   };

@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { screen, waitFor, act } from '@testing-library/react'
+import { render as rtlRender } from '@testing-library/react'
+import { BrowserRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
-import { render } from '../../test/test-utils'
 import Login from '../Login'
 import { mockApiResponses } from '../../test/__mocks__/api'
 import { api } from '../../lib/api'
@@ -10,7 +11,17 @@ import { api } from '../../lib/api'
 vi.mock('../../lib/api', () => ({
   api: {
     post: vi.fn(),
+    get: vi.fn(() => Promise.resolve({ data: {} })),
+    patch: vi.fn(() => Promise.resolve({ data: {} })),
+    put: vi.fn(() => Promise.resolve({ data: {} })),
+    delete: vi.fn(() => Promise.resolve({ data: {} })),
+    defaults: {
+      headers: {
+        common: {}
+      }
+    }
   },
+  setToken: vi.fn(),
 }))
 
 // Mock useNavigate
@@ -22,6 +33,27 @@ vi.mock('react-router-dom', async () => {
     useNavigate: () => mockNavigate,
   }
 })
+
+// Unmock AuthContext to use the real implementation
+vi.doUnmock('../../contexts/AuthContext')
+vi.mock('../../contexts/AuthContext', async () => {
+  const actual = await vi.importActual('../../contexts/AuthContext') as typeof import('../../contexts/AuthContext')
+  return actual
+})
+
+// Custom render function that uses the real AuthProvider
+import { AuthProvider } from '../../contexts/AuthContext'
+const render = (ui: React.ReactElement) => {
+  return rtlRender(ui, {
+    wrapper: ({ children }) => (
+      <BrowserRouter>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </BrowserRouter>
+    )
+  })
+}
 
 describe('Login Component', () => {
   beforeEach(() => {
@@ -79,7 +111,9 @@ describe('Login Component', () => {
       })
     })
     
-    expect(mockNavigate).toHaveBeenCalledWith('/')
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/')
+    }, { timeout: 3000 })
   })
 
   it('shows loading state during login', async () => {

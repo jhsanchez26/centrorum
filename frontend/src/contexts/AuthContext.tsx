@@ -41,18 +41,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const token = localStorage.getItem('token');
     if (token) {
       setToken(token);
-      // Verify token and get user info
       api.get('/auth/profile/')
         .then(response => {
           const userData = response.data;
-          // Normalize bio to always be a string (empty string if null/undefined)
           setUser({
             ...userData,
             bio: userData.bio || ''
           });
         })
         .catch(() => {
-          // Token is invalid, clear it
           localStorage.removeItem('token');
           setToken();
         })
@@ -98,7 +95,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       localStorage.setItem('token', access);
       setToken(access);
-      // Normalize bio to always be a string (empty string if null/undefined)
       setUser({
         ...userData,
         bio: userData.bio || ''
@@ -130,14 +126,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await api.get('/auth/profile/');
       const userData = response.data;
-      // Normalize bio to always be a string (empty string if null/undefined)
       setUser({
         ...userData,
         bio: userData.bio || ''
       });
     } catch (error) {
-      // If refresh fails, user might not be authenticated
-      console.error('Failed to refresh user data');
+      // Silent fail - user might not be authenticated
     }
   };
 

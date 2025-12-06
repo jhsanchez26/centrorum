@@ -186,9 +186,6 @@ class RSVPViewsTest(APITestCase):
         }
         
         response = self.client.post(self.rsvp_url, rsvp_data)
-        if response.status_code != status.HTTP_201_CREATED:
-            print(f"Response status: {response.status_code}")
-            print(f"Response data: {response.data}")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(RSVP.objects.count(), 1)
         
@@ -208,7 +205,6 @@ class RSVPViewsTest(APITestCase):
         }
         
         response = self.client.post(self.rsvp_url, rsvp_data)
-        # Should update existing RSVP instead of creating new one
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(RSVP.objects.count(), 1)
 

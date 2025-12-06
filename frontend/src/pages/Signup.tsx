@@ -15,6 +15,17 @@ export default function Signup() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    
+    if (!email.trim() || !displayName.trim() || !password.trim() || !passwordConfirm.trim()) {
+      setError("All fields are required");
+      return;
+    }
+    
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long");
+      return;
+    }
+    
     setError("");
     setLoading(true);
 
@@ -22,7 +33,7 @@ export default function Signup() {
       await register(email, displayName, password, passwordConfirm);
       navigate("/");
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Registration failed');
     } finally {
       setLoading(false);
     }

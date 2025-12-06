@@ -67,7 +67,6 @@ export default function Profile() {
       setError("");
     } catch (err: any) {
       setError("Failed to load profile");
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -79,20 +78,18 @@ export default function Profile() {
   }, [userId, fetchProfileForUser]);
 
   useEffect(() => {
-    // Wait for auth to finish loading before processing
     if (authLoading) {
       return;
     }
 
     if (userId === "me") {
       if (currentUser) {
-        // Fetch profile using current user's encrypted ID instead of redirecting
         const targetId = currentUser.encrypted_id || currentUser.id.toString();
         fetchProfileForUser(targetId);
       } else {
-        // User is not logged in
         setError("You must be logged in to view your profile");
         setLoading(false);
+        setProfileData(null);
       }
       return;
     }
@@ -110,7 +107,6 @@ export default function Profile() {
         bio: editBio
       });
       
-      // Update local state
       if (profileData) {
         setProfileData({
           ...profileData,
@@ -118,7 +114,6 @@ export default function Profile() {
         });
       }
       
-      // Update current user in auth context if viewing own profile
       if (currentUser && profileData && currentUser.id === profileData.user.id) {
         await refreshUser();
       }
@@ -127,7 +122,6 @@ export default function Profile() {
       setError("");
     } catch (err: any) {
       setError("Failed to update profile");
-      console.error(err);
     } finally {
       setSubmitting(false);
     }
@@ -154,7 +148,6 @@ export default function Profile() {
         org: editingPost.org
       });
       
-      // Update the post in the list
       if (profileData) {
         setProfileData({
           ...profileData,
@@ -170,7 +163,6 @@ export default function Profile() {
       setError("");
     } catch (err: any) {
       setError("Failed to update post");
-      console.error(err);
     } finally {
       setSubmitting(false);
     }
@@ -189,7 +181,6 @@ export default function Profile() {
       }
     } catch (err: any) {
       setError("Failed to delete post");
-      console.error(err);
     }
   };
 
@@ -213,7 +204,6 @@ export default function Profile() {
     if (!profileData || !currentUser) return;
     
     try {
-      // First check if there's already a conversation
       const conversationsResponse = await api.get("/auth/conversations/");
       const conversations = conversationsResponse.data;
       
@@ -224,12 +214,10 @@ export default function Profile() {
       );
       
       if (existingConversation) {
-        // Navigate directly to the messaging page
         navigate("/messaging");
         return;
       }
       
-      // Check if there's already a pending request
       const requestsResponse = await api.get("/auth/conversation-requests/");
       const requests = requestsResponse.data;
       const existingRequest = requests.find((req: any) => 
@@ -248,7 +236,6 @@ export default function Profile() {
         return;
       }
       
-      // Show message dialog
       setShowMessageDialog(true);
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || "Failed to check conversations";
@@ -268,7 +255,6 @@ export default function Profile() {
         message: requestMessage.trim(),
       });
       
-      // Show success message and navigate to messaging
       setShowMessageDialog(false);
       setRequestMessage("");
       alert("Conversation request sent! You can view it in your Messages.");
@@ -486,7 +472,9 @@ export default function Profile() {
         {isEditingProfile ? (
           <div>
             <div style={{ marginBottom: "16px" }}>
-              <label style={{ 
+              <label 
+                htmlFor="edit-display-name"
+                style={{ 
                 display: "block", 
                 marginBottom: "8px", 
                 fontWeight: "600",
@@ -495,6 +483,7 @@ export default function Profile() {
                 Display Name
               </label>
               <input
+                id="edit-display-name"
                 type="text"
                 value={editDisplayName}
                 onChange={(e) => setEditDisplayName(e.target.value)}
@@ -509,7 +498,9 @@ export default function Profile() {
               />
             </div>
             <div style={{ marginBottom: "16px" }}>
-              <label style={{ 
+              <label 
+                htmlFor="edit-bio"
+                style={{ 
                 display: "block", 
                 marginBottom: "8px", 
                 fontWeight: "600",
@@ -518,6 +509,7 @@ export default function Profile() {
                 Bio
               </label>
               <textarea
+                id="edit-bio"
                 value={editBio}
                 onChange={(e) => setEditBio(e.target.value)}
                 rows={4}
@@ -694,7 +686,9 @@ export default function Profile() {
               {editingPost && editingPost.id === post.id ? (
                 <div>
                   <div style={{ marginBottom: "16px" }}>
-                    <label style={{ 
+                    <label 
+                      htmlFor={`edit-post-title-${post.id}`}
+                      style={{ 
                       display: "block", 
                       marginBottom: "8px", 
                       fontWeight: "600",
@@ -703,6 +697,7 @@ export default function Profile() {
                       Title
                     </label>
                     <input
+                      id={`edit-post-title-${post.id}`}
                       type="text"
                       value={editPostTitle}
                       onChange={(e) => setEditPostTitle(e.target.value)}
@@ -718,7 +713,9 @@ export default function Profile() {
                   </div>
                   <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
                     <div style={{ flex: 1 }}>
-                      <label style={{ 
+                      <label 
+                        htmlFor={`edit-post-type-${post.id}`}
+                        style={{ 
                         display: "block", 
                         marginBottom: "8px", 
                         fontWeight: "600",
@@ -727,6 +724,7 @@ export default function Profile() {
                         Type
                       </label>
                       <select
+                        id={`edit-post-type-${post.id}`}
                         value={editPostType}
                         onChange={(e) => setEditPostType(e.target.value)}
                         style={{
@@ -746,7 +744,9 @@ export default function Profile() {
                       </select>
                     </div>
                     <div style={{ flex: 1 }}>
-                      <label style={{ 
+                      <label 
+                        htmlFor={`edit-post-modality-${post.id}`}
+                        style={{ 
                         display: "block", 
                         marginBottom: "8px", 
                         fontWeight: "600",
@@ -755,6 +755,7 @@ export default function Profile() {
                         Modality
                       </label>
                       <select
+                        id={`edit-post-modality-${post.id}`}
                         value={editPostModality}
                         onChange={(e) => setEditPostModality(e.target.value)}
                         style={{
@@ -773,7 +774,9 @@ export default function Profile() {
                     </div>
                   </div>
                   <div style={{ marginBottom: "16px" }}>
-                    <label style={{ 
+                    <label 
+                      htmlFor={`edit-post-description-${post.id}`}
+                      style={{ 
                       display: "block", 
                       marginBottom: "8px", 
                       fontWeight: "600",
@@ -782,6 +785,7 @@ export default function Profile() {
                       Description
                     </label>
                     <textarea
+                      id={`edit-post-description-${post.id}`}
                       value={editPostDescription}
                       onChange={(e) => setEditPostDescription(e.target.value)}
                       rows={6}

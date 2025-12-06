@@ -1,6 +1,28 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
+from django.db import OperationalError
+import time
 from .models import User, Conversation, Message, ConversationRequest
+
+
+def retry_on_lock(max_retries=5, base_delay=0.01):
+    """Decorator to retry database operations on SQLite lock errors"""
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            for attempt in range(max_retries):
+                try:
+                    return func(*args, **kwargs)
+                except OperationalError as e:
+                    error_str = str(e).lower()
+                    if ('locked' in error_str or 'database is locked' in error_str) and attempt < max_retries - 1:
+                        # Exponential backoff with jitter
+                        delay = base_delay * (2 ** attempt) + (time.time() % 0.01)
+                        time.sleep(delay)
+                        continue
+                    raise
+            return None
+        return wrapper
+    return decorator
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
@@ -25,7 +47,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return user
 
 class UserSerializer(serializers.ModelSerializer):
-    bio = serializers.CharField(required=False, allow_blank=True, default='')
+    bio = serializers.CharField(required=False, allow_blank=True, allow_null=True, default='', max_length=500)
     encrypted_id = serializers.SerializerMethodField()
     
     class Meta:
@@ -42,6 +64,13 @@ class UserSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         representation['bio'] = representation.get('bio') or ''
         return representation
+    
+    def to_internal_value(self, data):
+        """Ensure bio is converted to empty string if None"""
+        if 'bio' in data and data['bio'] is None:
+            data = data.copy()
+            data['bio'] = ''
+        return super().to_internal_value(data)
 
 
 class MinimalUserSerializer(serializers.ModelSerializer):
@@ -89,9 +118,17 @@ class ConversationSerializer(serializers.ModelSerializer):
     
     def get_last_message(self, obj):
         """Get the last message in the conversation"""
-        last_msg = obj.get_last_message()
-        if last_msg:
-            return MessageSerializer(last_msg).data
+        @retry_on_lock(max_retries=10, base_delay=0.005)
+        def get_last():
+            return obj.get_last_message()
+        
+        try:
+            last_msg = get_last()
+            if last_msg:
+                return MessageSerializer(last_msg).data
+        except OperationalError:
+            # If we can't get the last message due to locks, return None
+            pass
         return None
     
     def get_unread_count(self, obj):
@@ -99,10 +136,19 @@ class ConversationSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request and request.user:
             other_user = obj.get_other_user(request.user)
-            return obj.messages.filter(
-                sender=other_user,
-                read_at__isnull=True
-            ).count()
+            
+            @retry_on_lock(max_retries=10, base_delay=0.005)
+            def get_count():
+                return obj.messages.filter(
+                    sender=other_user,
+                    read_at__isnull=True
+                ).count()
+            
+            try:
+                return get_count()
+            except OperationalError:
+                # If we can't get the count due to locks, return 0 as a safe default
+                return 0
         return 0
 
 

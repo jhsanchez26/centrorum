@@ -44,14 +44,16 @@ function Header() {
       {user ? (
         <>
           <Link to="/messaging" style={{ 
+            marginLeft: "auto",
             textDecoration: "none", 
-            color: "#2d3748",
-            fontWeight: "500"
+            color: "#006729",
+            fontWeight: "600",
+            fontSize: "14px",
+            marginRight: "12px"
           }}>
             Messages
           </Link>
           <Link to="/profile/me" style={{ 
-            marginLeft: "auto",
             textDecoration: "none", 
             color: "#006729",
             fontWeight: "600",

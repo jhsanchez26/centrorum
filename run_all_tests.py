@@ -18,26 +18,53 @@ def run_backend_tests():
     os.chdir('backend')
     
     try:
-        print("Installing backend dependencies...")
         install_result = subprocess.run([
-            sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt'
+            sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt', '-q'
         ], check=True, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=300)
-        print("Dependencies installed successfully")
         
-        print("Running backend tests...")
         result = subprocess.run([
             sys.executable, '-m', 'pytest',
+            '--ignore=test_runner.py',
             '--cov=accounts',
             '--cov=listings',
             '--cov-report=html',
             '--cov-report=term-missing',
             '-v',
-            '--tb=short'
+            '--tb=no'
         ], capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=300)
         
-        print(result.stdout)
-        if result.stderr:
-            print("STDERR:", result.stderr)
+        # Parse and display only test results
+        lines = result.stdout.split('\n')
+        test_results = []
+        summary_lines = []
+        
+        for line in lines:
+            line_stripped = line.strip()
+            # Capture individual test results
+            if (' PASSED' in line or ' FAILED' in line or ' ERROR' in line) and 'test_' in line:
+                test_results.append(line_stripped)
+            # Capture summary lines
+            elif any(keyword in line.lower() for keyword in ['passed', 'failed', 'error', 'warnings']):
+                if 'test session starts' not in line.lower() and 'short test summary' not in line.lower():
+                    summary_lines.append(line_stripped)
+        
+        if test_results:
+            for test in test_results:
+                print(test)
+        
+        # Show summary at the end
+        if summary_lines:
+            print("\n" + "=" * 50)
+            for line in summary_lines[-3:]:  # Show last 3 summary lines
+                if line:
+                    print(line)
+        
+        if result.stderr and result.returncode != 0:
+            error_lines = [line.strip() for line in result.stderr.split('\n') if line.strip() and 'warning' not in line.lower()]
+            if error_lines:
+                print("\nErrors:")
+                for err in error_lines[:5]:  # Show first 5 error lines
+                    print(err)
         
         return result.returncode == 0
         
@@ -78,19 +105,44 @@ def run_frontend_tests():
                 print("Error: npm not found. Please install Node.js and npm.")
                 return False
         
-        print(f"Using npm command: {npm_cmd}")
+        subprocess.run([npm_cmd, 'install', '--silent'], check=True, capture_output=True, text=True, encoding='utf-8', errors='replace')
         
-        print("Installing frontend dependencies...")
-        subprocess.run([npm_cmd, 'install'], check=True, capture_output=True, text=True, encoding='utf-8', errors='replace')
-        
-        print("Running frontend tests...")
         result = subprocess.run([
-            npm_cmd, 'run', 'test', '--', '--run'
+            npm_cmd, 'run', 'test', '--', '--run', '--reporter=verbose'
         ], capture_output=True, text=True, encoding='utf-8', errors='replace')
         
-        print(result.stdout)
-        if result.stderr:
-            print("STDERR:", result.stderr)
+        # Parse and display only test results
+        lines = result.stdout.split('\n')
+        test_results = []
+        summary_lines = []
+        
+        for line in lines:
+            line_stripped = line.strip()
+            # Capture test results (✓ or × markers, or PASS/FAIL)
+            if ('✓' in line or '×' in line) and ('test' in line.lower() or '.test.' in line or '.spec.' in line):
+                test_results.append(line_stripped)
+            # Capture summary lines
+            elif any(keyword in line for keyword in ['Test Files', 'Tests ', 'passed', 'failed']):
+                if line_stripped and 'node_modules' not in line:
+                    summary_lines.append(line_stripped)
+        
+        if test_results:
+            for test in test_results:
+                print(test)
+        
+        # Show summary at the end
+        if summary_lines:
+            print("\n" + "=" * 50)
+            for line in summary_lines[-3:]:  # Show last 3 summary lines
+                if line:
+                    print(line)
+        
+        if result.stderr and result.returncode != 0:
+            error_lines = [line.strip() for line in result.stderr.split('\n') if line.strip() and 'warning' not in line.lower()]
+            if error_lines:
+                print("\nErrors:")
+                for err in error_lines[:5]:  # Show first 5 error lines
+                    print(err)
         
         output = result.stdout + result.stderr
         import re

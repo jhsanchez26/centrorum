@@ -54,19 +54,19 @@ export default function Messaging() {
   const fetchConversations = useCallback(async () => {
     try {
       const response = await api.get("/auth/conversations/");
-      setConversations(response.data);
+      setConversations(Array.isArray(response.data) ? response.data : []);
     } catch (err: any) {
-      console.error("Failed to load conversations:", err);
       setError("Failed to load conversations");
+      setConversations([]); // Reset to empty array on error
     }
   }, []);
 
   const fetchConversationRequests = useCallback(async () => {
     try {
       const response = await api.get("/auth/conversation-requests/");
-      setConversationRequests(response.data);
+      setConversationRequests(Array.isArray(response.data) ? response.data : []);
     } catch (err: any) {
-      console.error("Failed to load conversation requests:", err);
+      setConversationRequests([]);
     }
   }, []);
 
@@ -75,14 +75,9 @@ export default function Messaging() {
       setLoadingMessages(true);
       const response = await api.get(`/auth/conversations/${conversationId}/messages/`);
       setMessages(response.data);
-      
-      // Mark messages as read
       await api.post(`/auth/conversations/${conversationId}/mark-read/`);
-      
-      // Refresh conversations to update unread count
       await fetchConversations();
     } catch (err: any) {
-      console.error("Failed to load messages:", err);
       setError("Failed to load messages");
     } finally {
       setLoadingMessages(false);
@@ -130,12 +125,9 @@ export default function Messaging() {
 
       setMessages([...messages, response.data]);
       setNewMessage("");
-      
-      // Refresh conversations to update last message
       await fetchConversations();
     } catch (err: any) {
       setError("Failed to send message");
-      console.error(err);
     } finally {
       setSendingMessage(false);
     }
@@ -147,13 +139,9 @@ export default function Messaging() {
         action: "accept",
       });
 
-      // Refresh requests list to remove accepted request
       await fetchConversationRequests();
-      
-      // Refresh conversations
       await fetchConversations();
       
-      // Select the new conversation
       if (response.data.conversation) {
         setSelectedConversation(response.data.conversation);
         await fetchMessages(response.data.conversation.id);
@@ -162,7 +150,6 @@ export default function Messaging() {
       setActiveTab("conversations");
     } catch (err: any) {
       setError("Failed to accept request");
-      console.error(err);
     }
   };
 
@@ -172,11 +159,9 @@ export default function Messaging() {
         action: "deny",
       });
 
-      // Refresh requests list
       await fetchConversationRequests();
     } catch (err: any) {
       setError("Failed to deny request");
-      console.error(err);
     }
   };
 
@@ -305,9 +290,10 @@ export default function Messaging() {
             >
               Requests
               {(() => {
-                const pendingReceivedCount = conversationRequests.filter(
-                  req => req.recipient.id === currentUser?.id && req.status === 'pending'
-                ).length;
+                if (!currentUser) return null;
+                const pendingReceivedCount = Array.isArray(conversationRequests) ? conversationRequests.filter(
+                  req => req.recipient.id === currentUser.id && req.status === 'pending'
+                ).length : 0;
                 return pendingReceivedCount > 0 ? (
                   <span style={{
                     position: "absolute",
@@ -338,7 +324,7 @@ export default function Messaging() {
             padding: 8
           }}>
             {activeTab === "conversations" ? (
-              conversations.length === 0 ? (
+              (!Array.isArray(conversations) || conversations.length === 0) ? (
                 <div style={{
                   padding: 40,
                   textAlign: "center",
@@ -350,7 +336,7 @@ export default function Messaging() {
                   </p>
                 </div>
               ) : (
-                conversations.map((conv) => (
+                (Array.isArray(conversations) ? conversations : []).map((conv) => (
                   <div
                     key={conv.id}
                     onClick={() => handleSelectConversation(conv)}
@@ -425,14 +411,24 @@ export default function Messaging() {
               )
             ) : (
               (() => {
-                // Filter requests: show pending requests where user is recipient, 
-                // or show all requests where user is requester (to see status)
-                const receivedRequests = conversationRequests.filter(
-                  req => req.recipient.id === currentUser?.id && req.status === 'pending'
-                );
-                const sentRequests = conversationRequests.filter(
-                  req => req.requester.id === currentUser?.id && req.status !== 'accepted'
-                );
+                if (!currentUser) {
+                  return (
+                    <div style={{
+                      padding: 40,
+                      textAlign: "center",
+                      color: "#666"
+                    }}>
+                      <p>No conversation requests.</p>
+                    </div>
+                  );
+                }
+                
+                const receivedRequests = Array.isArray(conversationRequests) ? conversationRequests.filter(
+                  req => req.recipient.id === currentUser.id && req.status === 'pending'
+                ) : [];
+                const sentRequests = Array.isArray(conversationRequests) ? conversationRequests.filter(
+                  req => req.requester.id === currentUser.id && req.status !== 'accepted'
+                ) : [];
 
                 if (receivedRequests.length === 0 && sentRequests.length === 0) {
                   return (

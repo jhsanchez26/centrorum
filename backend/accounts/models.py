@@ -32,7 +32,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     # core profile
     display_name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
-    bio = models.TextField(blank=True, max_length=500)
+    bio = models.TextField(blank=True, null=True, default='', max_length=500)
 
     # Django admin / permissions plumbing
     is_active = models.BooleanField(default=True)
@@ -46,6 +46,12 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.display_name
+    
+    def save(self, *args, **kwargs):
+        """Ensure bio is never None"""
+        if self.bio is None:
+            self.bio = ''
+        super().save(*args, **kwargs)
     
     def get_encrypted_id(self):
         """Get an encrypted version of the user ID for use in URLs"""
