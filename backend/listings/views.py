@@ -101,7 +101,7 @@ def create_post(request):
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def toggle_rsvp(request):
-    """Create or update RSVP for a listing"""
+    """Create, update, or delete RSVP for a listing"""
     listing_id = request.data.get('listing')
     rsvp_status = request.data.get('status')
     
@@ -113,17 +113,23 @@ def toggle_rsvp(request):
     except Listing.DoesNotExist:
         return Response({'error': 'Listing not found'}, status=status.HTTP_404_NOT_FOUND)
     
-    # Get or create RSVP
-    rsvp, created = RSVP.objects.get_or_create(
-        user=request.user,
-        listing=listing,
-        defaults={'status': rsvp_status}
-    )
-    
-    if not created:
-        # Update existing RSVP
-        rsvp.status = rsvp_status
-        rsvp.save()
+    # Check if RSVP already exists
+    try:
+        rsvp = RSVP.objects.get(user=request.user, listing=listing)
+        # If user clicks the same status, remove the RSVP
+        if rsvp.status == rsvp_status:
+            rsvp.delete()
+        else:
+            # Update to different status
+            rsvp.status = rsvp_status
+            rsvp.save()
+    except RSVP.DoesNotExist:
+        # Create new RSVP
+        RSVP.objects.create(
+            user=request.user,
+            listing=listing,
+            status=rsvp_status
+        )
     
     # Return updated listing data
     serializer = ListingSerializer(listing, context={'request': request})
