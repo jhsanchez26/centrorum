@@ -10,11 +10,53 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only-secret-key-change-me")
 DEBUG = os.getenv("DEBUG", "1") == "1"
 
 # comma-separated list, e.g. "localhost,127.0.0.1"
-ALLOWED_HOSTS = [h for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h]
+ALLOWED_HOSTS = [
+    h for h in os.getenv(
+        "ALLOWED_HOSTS",
+        "localhost,127.0.0.1"
+    ).split(",") if h
+]
 
-# for local dev (adjust as needed)
-CSRF_TRUSTED_ORIGINS = [o for o in os.getenv("CSRF_TRUSTED_ORIGINS", "http://localhost:8000,http://127.0.0.1:8000,http://localhost:5173").split(",") if o]
-CORS_ALLOWED_ORIGINS = [o for o in os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",") if o]
+# Trusted origins (CSRF) and CORS origins for frontend
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+]
+
+# ---- CORS FIXES ----
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+]
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "origin",
+    "dnt",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
 
 # ---------- Apps ----------
 INSTALLED_APPS = [
@@ -27,12 +69,12 @@ INSTALLED_APPS = [
 
     # third-party
     "rest_framework",
-    'rest_framework_simplejwt',
-    'django_filters',
-    'accounts',
+    "rest_framework_simplejwt",
+    "django_filters",
     "corsheaders",
 
     # local apps
+    "accounts",
     "core",
     "listings",
 ]
@@ -42,7 +84,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
 
-    # cors must be as high as possible
+    # CORS must be first
     "corsheaders.middleware.CorsMiddleware",
 
     "django.middleware.common.CommonMiddleware",
@@ -73,8 +115,6 @@ TEMPLATES = [
 WSGI_APPLICATION = "centrorum.wsgi.application"
 
 # ---------- Database ----------
-# Uses DATABASE_URL if present (e.g. postgresql://user:pass@db:5432/centrorum),
-# falls back to local Postgres in Docker, and finally to SQLite for bare dev.
 DATABASES = {
     "default": dj_database_url.parse(
         os.getenv(
@@ -86,13 +126,6 @@ DATABASES = {
     )
 }
 
-# If you truly want SQLite when not using Docker, uncomment below:
-# if os.getenv("USE_SQLITE", "0") == "1":
-#     DATABASES["default"] = {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-
 # ---------- Password validation ----------
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -101,7 +134,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-AUTH_USER_MODEL = 'accounts.User'
+AUTH_USER_MODEL = "accounts.User"
 
 # ---------- I18N / TZ ----------
 LANGUAGE_CODE = "en-us"
@@ -129,7 +162,7 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
 }
 
-# ---------- Security (easy hardening switches) ----------
+# ---------- Security ----------
 SECURE_BROWSER_XSS_FILTER = True
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = False

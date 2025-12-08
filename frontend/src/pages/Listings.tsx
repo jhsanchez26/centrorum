@@ -953,79 +953,112 @@ export default function Listings() {
                       flexWrap: "wrap",
                     }}
                   >
-                    <span>Going: {listing.going_count}</span>
-                    <span>Interested: {listing.interested_count}</span>
-                    <span>Not going: {listing.not_going_count}</span>
+                    {listing.type === "event" ? (
+                      <>
+                        <span>Going: {listing.going_count}</span>
+                        <span>Interested: {listing.interested_count}</span>
+                        <span>Not going: {listing.not_going_count}</span>
+                      </>
+                    ) : (
+                      <span>Interested: {listing.interested_count}</span>
+                    )}
                   </div>
 
                   {/* RSVP Buttons */}
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <button
-                      onClick={() => handleRSVP(listing.id, "going")}
-                      style={{
-                        padding: "6px 12px",
-                        backgroundColor:
-                          listing.user_rsvp_status === "going"
-                            ? "#16a34a"
-                            : "#f8fafc",
-                        color:
-                          listing.user_rsvp_status === "going"
-                            ? "white"
-                            : "#16a34a",
-                        border: "1px solid #16a34a",
-                        borderRadius: 999,
-                        cursor: "pointer",
-                        fontSize: 11,
-                        fontWeight:
-                          listing.user_rsvp_status === "going" ? 700 : 500,
-                      }}
-                    >
-                      Going
-                    </button>
-                    <button
-                      onClick={() => handleRSVP(listing.id, "interested")}
-                      style={{
-                        padding: "6px 12px",
-                        backgroundColor:
-                          listing.user_rsvp_status === "interested"
-                            ? "#f97316"
-                            : "#f8fafc",
-                        color:
-                          listing.user_rsvp_status === "interested"
-                            ? "white"
-                            : "#f97316",
-                        border: "1px solid #f97316",
-                        borderRadius: 999,
-                        cursor: "pointer",
-                        fontSize: 11,
-                        fontWeight:
-                          listing.user_rsvp_status === "interested" ? 700 : 500,
-                      }}
-                    >
-                      Interested
-                    </button>
-                    <button
-                      onClick={() => handleRSVP(listing.id, "not_going")}
-                      style={{
-                        padding: "6px 12px",
-                        backgroundColor:
-                          listing.user_rsvp_status === "not_going"
-                            ? "#ef4444"
-                            : "#f8fafc",
-                        color:
-                          listing.user_rsvp_status === "not_going"
-                            ? "white"
-                            : "#ef4444",
-                        border: "1px solid #ef4444",
-                        borderRadius: 999,
-                        cursor: "pointer",
-                        fontSize: 11,
-                        fontWeight:
-                          listing.user_rsvp_status === "not_going" ? 700 : 500,
-                      }}
-                    >
-                      Not Going
-                    </button>
+                    {listing.type === "event" ? (
+                      <>
+                        <button
+                          onClick={() => handleRSVP(listing.id, "going")}
+                          style={{
+                            padding: "6px 12px",
+                            backgroundColor:
+                              listing.user_rsvp_status === "going"
+                                ? "#16a34a"
+                                : "#f8fafc",
+                            color:
+                              listing.user_rsvp_status === "going"
+                                ? "white"
+                                : "#16a34a",
+                            border: "1px solid #16a34a",
+                            borderRadius: 999,
+                            cursor: "pointer",
+                            fontSize: 11,
+                            fontWeight:
+                              listing.user_rsvp_status === "going" ? 700 : 500,
+                          }}
+                        >
+                          Going
+                        </button>
+                        <button
+                          onClick={() => handleRSVP(listing.id, "interested")}
+                          style={{
+                            padding: "6px 12px",
+                            backgroundColor:
+                              listing.user_rsvp_status === "interested"
+                                ? "#f97316"
+                                : "#f8fafc",
+                            color:
+                              listing.user_rsvp_status === "interested"
+                                ? "white"
+                                : "#f97316",
+                            border: "1px solid #f97316",
+                            borderRadius: 999,
+                            cursor: "pointer",
+                            fontSize: 11,
+                            fontWeight:
+                              listing.user_rsvp_status === "interested" ? 700 : 500,
+                          }}
+                        >
+                          Interested
+                        </button>
+                        <button
+                          onClick={() => handleRSVP(listing.id, "not_going")}
+                          style={{
+                            padding: "6px 12px",
+                            backgroundColor:
+                              listing.user_rsvp_status === "not_going"
+                                ? "#ef4444"
+                                : "#f8fafc",
+                            color:
+                              listing.user_rsvp_status === "not_going"
+                                ? "white"
+                                : "#ef4444",
+                            border: "1px solid #ef4444",
+                            borderRadius: 999,
+                            cursor: "pointer",
+                            fontSize: 11,
+                            fontWeight:
+                              listing.user_rsvp_status === "not_going" ? 700 : 500,
+                          }}
+                        >
+                          Not Going
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => handleRSVP(listing.id, "interested")}
+                        style={{
+                          padding: "6px 12px",
+                          backgroundColor:
+                            listing.user_rsvp_status === "interested"
+                              ? "#f97316"
+                              : "#f8fafc",
+                          color:
+                            listing.user_rsvp_status === "interested"
+                              ? "white"
+                              : "#f97316",
+                          border: "1px solid #f97316",
+                          borderRadius: 999,
+                          cursor: "pointer",
+                          fontSize: 11,
+                          fontWeight:
+                            listing.user_rsvp_status === "interested" ? 700 : 500,
+                        }}
+                      >
+                        Interested
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
