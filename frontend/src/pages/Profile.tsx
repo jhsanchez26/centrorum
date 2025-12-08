@@ -41,11 +41,13 @@ export default function Profile() {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const { user: currentUser, refreshUser, loading: authLoading } = useAuth();
+
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editingPost, setEditingPost] = useState<Listing | null>(null);
+
   const [editDisplayName, setEditDisplayName] = useState("");
   const [editBio, setEditBio] = useState("");
   const [editPostTitle, setEditPostTitle] = useState("");
@@ -53,6 +55,7 @@ export default function Profile() {
   const [editPostType, setEditPostType] = useState("post");
   const [editPostModality, setEditPostModality] = useState("in-person");
   const [submitting, setSubmitting] = useState(false);
+
   const [creatingRequest, setCreatingRequest] = useState(false);
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
@@ -78,9 +81,7 @@ export default function Profile() {
   }, [userId, fetchProfileForUser]);
 
   useEffect(() => {
-    if (authLoading) {
-      return;
-    }
+    if (authLoading) return;
 
     if (userId === "me") {
       if (currentUser) {
@@ -93,31 +94,31 @@ export default function Profile() {
       }
       return;
     }
-    
+
     if (userId) {
       fetchProfile();
     }
-  }, [userId, currentUser, navigate, authLoading, fetchProfileForUser, fetchProfile]);
+  }, [userId, currentUser, authLoading, fetchProfileForUser, fetchProfile]);
 
   const handleSaveProfile = async () => {
     try {
       setSubmitting(true);
       const response = await api.patch("/auth/profile/", {
         display_name: editDisplayName,
-        bio: editBio
+        bio: editBio,
       });
-      
+
       if (profileData) {
         setProfileData({
           ...profileData,
-          user: { ...profileData.user, ...response.data }
+          user: { ...profileData.user, ...response.data },
         });
       }
-      
+
       if (currentUser && profileData && currentUser.id === profileData.user.id) {
         await refreshUser();
       }
-      
+
       setIsEditingProfile(false);
       setError("");
     } catch (err: any) {
@@ -137,7 +138,7 @@ export default function Profile() {
 
   const handleSavePost = async () => {
     if (!editingPost) return;
-    
+
     try {
       setSubmitting(true);
       const response = await api.put(`/listings/${editingPost.id}/`, {
@@ -145,16 +146,18 @@ export default function Profile() {
         description: editPostDescription,
         type: editPostType,
         modality: editPostModality,
-        org: editingPost.org
+        org: editingPost.org,
       });
-      
+
       if (profileData) {
         setProfileData({
           ...profileData,
-          posts: profileData.posts.map(p => p.id === editingPost.id ? response.data : p)
+          posts: profileData.posts.map((p) =>
+            p.id === editingPost.id ? response.data : p
+          ),
         });
       }
-      
+
       setEditingPost(null);
       setEditPostTitle("");
       setEditPostDescription("");
@@ -170,13 +173,13 @@ export default function Profile() {
 
   const handleDeletePost = async (postId: number) => {
     if (!window.confirm("Are you sure you want to delete this post?")) return;
-    
+
     try {
       await api.delete(`/listings/${postId}/`);
       if (profileData) {
         setProfileData({
           ...profileData,
-          posts: profileData.posts.filter(p => p.id !== postId)
+          posts: profileData.posts.filter((p) => p.id !== postId),
         });
       }
     } catch (err: any) {
@@ -202,43 +205,45 @@ export default function Profile() {
 
   const handleStartConversation = async () => {
     if (!profileData || !currentUser) return;
-    
+
     try {
       const conversationsResponse = await api.get("/auth/conversations/");
       const conversations = conversationsResponse.data;
-      
+
       const targetUserId = profileData.user.id;
-      const existingConversation = conversations.find((conv: any) => 
+      const existingConversation = conversations.find((conv: any) =>
         (conv.user1.id === targetUserId && conv.user2.id === currentUser.id) ||
         (conv.user2.id === targetUserId && conv.user1.id === currentUser.id)
       );
-      
+
       if (existingConversation) {
         navigate("/messaging");
         return;
       }
-      
+
       const requestsResponse = await api.get("/auth/conversation-requests/");
       const requests = requestsResponse.data;
-      const existingRequest = requests.find((req: any) => 
-        (req.requester.id === currentUser.id && req.recipient.id === targetUserId) ||
-        (req.recipient.id === currentUser.id && req.requester.id === targetUserId)
+      const existingRequest = requests.find((req: any) =>
+        (req.requester.id === currentUser.id &&
+          req.recipient.id === targetUserId) ||
+        (req.recipient.id === currentUser.id &&
+          req.requester.id === targetUserId)
       );
-      
-      if (existingRequest && existingRequest.status === 'pending') {
+
+      if (existingRequest && existingRequest.status === "pending") {
         if (existingRequest.requester.id === currentUser.id) {
           setError("You already have a pending request with this user");
-          setTimeout(() => setError(""), 5000);
         } else {
           setError("This user already sent you a request. Check your Messages.");
-          setTimeout(() => setError(""), 5000);
         }
+        setTimeout(() => setError(""), 5000);
         return;
       }
-      
+
       setShowMessageDialog(true);
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || "Failed to check conversations";
+      const errorMessage =
+        err.response?.data?.error || "Failed to check conversations";
       setError(errorMessage);
       setTimeout(() => setError(""), 5000);
     }
@@ -246,21 +251,23 @@ export default function Profile() {
 
   const handleSendConversationRequest = async () => {
     if (!profileData) return;
-    
+
     try {
       setCreatingRequest(true);
-      const userId = profileData.user.encrypted_id || profileData.user.id.toString();
+      const uId =
+        profileData.user.encrypted_id || profileData.user.id.toString();
       await api.post("/auth/conversation-requests/create/", {
-        recipient_id: userId,
+        recipient_id: uId,
         message: requestMessage.trim(),
       });
-      
+
       setShowMessageDialog(false);
       setRequestMessage("");
       alert("Conversation request sent! You can view it in your Messages.");
       navigate("/messaging");
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || "Failed to send conversation request";
+      const errorMessage =
+        err.response?.data?.error || "Failed to send conversation request";
       setError(errorMessage);
       setTimeout(() => setError(""), 5000);
     } finally {
@@ -268,7 +275,8 @@ export default function Profile() {
     }
   };
 
-  const isOwnProfile = currentUser && profileData && currentUser.id === profileData.user.id;
+  const isOwnProfile =
+    currentUser && profileData && currentUser.id === profileData.user.id;
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -277,25 +285,39 @@ export default function Profile() {
       month: "long",
       day: "numeric",
       hour: "2-digit",
-      minute: "2-digit"
+      minute: "2-digit",
     });
   };
 
+  // ---------- LOADING / ERROR STATES WITH CARD LAYOUT ----------
+
   if (authLoading || loading) {
     return (
-      <main style={{ 
-        padding: 16, 
-        width: "100%",
-        backgroundColor: "#f7fafc",
-        minHeight: "100vh"
-      }}>
-        <div style={{ 
-          maxWidth: "800px", 
-          margin: "0 auto", 
-          padding: "40px 20px",
-          textAlign: "center"
-        }}>
-          <p>Loading profile...</p>
+      <main
+        style={{
+          minHeight: "calc(100vh - 64px)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: "48px 24px",
+          backgroundColor: "var(--light-bg)",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 720,
+            width: "100%",
+            backgroundColor: "#fcfcf9",
+            borderRadius: 28,
+            boxShadow: "0 18px 40px rgba(0,0,0,0.10)",
+            border: "1px solid rgba(0,0,0,0.03)",
+            padding: "32px 40px",
+            textAlign: "center",
+          }}
+        >
+          <p style={{ margin: 0, color: "#4b5563", fontSize: 15 }}>
+            Loading profile...
+          </p>
         </div>
       </main>
     );
@@ -303,19 +325,47 @@ export default function Profile() {
 
   if (error || !profileData) {
     return (
-      <main style={{ 
-        padding: 16, 
-        width: "100%",
-        backgroundColor: "#f7fafc",
-        minHeight: "100vh"
-      }}>
-        <div style={{ 
-          maxWidth: "800px", 
-          margin: "0 auto", 
-          padding: "40px 20px",
-          textAlign: "center"
-        }}>
-          <p style={{ color: "#e53e3e" }}>{error || "Profile not found"}</p>
+      <main
+        style={{
+          minHeight: "calc(100vh - 64px)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: "48px 24px",
+          backgroundColor: "var(--light-bg)",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 720,
+            width: "100%",
+            backgroundColor: "#fcfcf9",
+            borderRadius: 28,
+            boxShadow: "0 18px 40px rgba(0,0,0,0.10)",
+            border: "1px solid rgba(0,0,0,0.03)",
+            padding: "32px 40px",
+            textAlign: "center",
+          }}
+        >
+          <h1
+            style={{
+              margin: "0 0 8px 0",
+              fontSize: 24,
+              fontWeight: 800,
+              color: "var(--text-dark)",
+            }}
+          >
+            Profile
+          </h1>
+          <p
+            style={{
+              margin: 0,
+              fontSize: 14,
+              color: "#b91c1c",
+            }}
+          >
+            {error || "Profile not found"}
+          </p>
         </div>
       </main>
     );
@@ -323,634 +373,737 @@ export default function Profile() {
 
   const { user, posts } = profileData;
 
+  // ---------- MAIN PROFILE UI ----------
+
   return (
-    <main style={{ 
-      padding: 16, 
-      width: "100%",
-      backgroundColor: "#f7fafc",
-      minHeight: "100vh"
-    }}>
-      <div style={{ 
-        maxWidth: "800px", 
-        margin: "0 auto"
-      }}>
-      {error && (
-        <div style={{
-          padding: 12,
-          backgroundColor: "#fee",
-          border: "1px solid #fcc",
-          borderRadius: 8,
-          color: "#c33",
-          marginBottom: 16
-        }}>
-          {error}
-        </div>
-      )}
-
-      {/* Message Dialog */}
-      {showMessageDialog && (
-        <div style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
+    <main
+      style={{
+        minHeight: "calc(100vh - 64px)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: "48px 24px",
+        backgroundColor: "var(--light-bg)",
+      }}
+    >
+      {/* Card principal tipo CentroRUM */}
+      <div
+        style={{
+          maxWidth: 980,
+          width: "100%",
+          backgroundColor: "#fcfcf9",
+          borderRadius: 28,
+          boxShadow: "0 18px 40px rgba(0,0,0,0.10)",
+          border: "1px solid rgba(0,0,0,0.03)",
+          padding: "32px 36px 34px",
           display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1000
+          flexDirection: "column",
+          gap: 24,
         }}
-        onClick={() => {
-          if (!creatingRequest) {
-            setShowMessageDialog(false);
-            setRequestMessage("");
-          }
-        }}
-        >
-          <div style={{
-            backgroundColor: "white",
-            borderRadius: 12,
-            padding: 24,
-            maxWidth: "500px",
-            width: "90%",
-            maxHeight: "80vh",
-            overflowY: "auto"
-          }}
-          onClick={(e) => e.stopPropagation()}
+      >
+        {/* Banner de error pequeño dentro del card */}
+        {error && (
+          <div
+            style={{
+              padding: 10,
+              backgroundColor: "#ffe6e6",
+              border: "1px solid #f5b5b5",
+              borderRadius: 12,
+              color: "#b91c1c",
+              fontSize: 13,
+            }}
           >
-            <h2 style={{
-              margin: "0 0 16px 0",
-              color: "#1a202c",
-              fontSize: "20px",
-              fontWeight: "600"
-            }}>
-              Send Conversation Request
-            </h2>
-            <p style={{
-              margin: "0 0 16px 0",
-              color: "#666",
-              fontSize: "14px"
-            }}>
-              Add an optional message to let {user.display_name} know why you'd like to connect:
-            </p>
-            <textarea
-              value={requestMessage}
-              onChange={(e) => setRequestMessage(e.target.value)}
-              placeholder="Optional message..."
-              style={{
-                width: "100%",
-                padding: "12px 16px",
-                border: "2px solid #e2e8f0",
-                borderRadius: 8,
-                fontSize: 14,
-                resize: "vertical",
-                minHeight: 100,
-                maxHeight: 200,
-                fontFamily: "inherit",
-                boxSizing: "border-box",
-                backgroundColor: "#f7fafc",
-                color: "#1a202c"
-              }}
-              rows={4}
-            />
-            <div style={{
-              display: "flex",
-              gap: 12,
-              marginTop: 20,
-              justifyContent: "flex-end"
-            }}>
-              <button
-                onClick={() => {
-                  setShowMessageDialog(false);
-                  setRequestMessage("");
-                }}
-                disabled={creatingRequest}
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#718096",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 8,
-                  cursor: creatingRequest ? "not-allowed" : "pointer",
-                  fontWeight: "600",
-                  fontSize: "14px"
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSendConversationRequest}
-                disabled={creatingRequest}
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: creatingRequest ? "#a0aec0" : "#006729",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 8,
-                  cursor: creatingRequest ? "not-allowed" : "pointer",
-                  fontWeight: "600",
-                  fontSize: "14px"
-                }}
-              >
-                {creatingRequest ? "Sending..." : "Send Request"}
-              </button>
-            </div>
+            {error}
           </div>
-        </div>
-      )}
-
-      {/* Profile Header */}
-      <div style={{
-        backgroundColor: "white",
-        padding: "32px",
-        borderRadius: "12px",
-        marginBottom: "24px",
-        border: "1px solid #dee2e6",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
-      }}>
-        {isEditingProfile ? (
-          <div>
-            <div style={{ marginBottom: "16px" }}>
-              <label 
-                htmlFor="edit-display-name"
-                style={{ 
-                display: "block", 
-                marginBottom: "8px", 
-                fontWeight: "600",
-                color: "#2d3748"
-              }}>
-                Display Name
-              </label>
-              <input
-                id="edit-display-name"
-                type="text"
-                value={editDisplayName}
-                onChange={(e) => setEditDisplayName(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "12px 16px",
-                  border: "2px solid #e2e8f0",
-                  borderRadius: 8,
-                  fontSize: 16,
-                  boxSizing: "border-box"
-                }}
-              />
-            </div>
-            <div style={{ marginBottom: "16px" }}>
-              <label 
-                htmlFor="edit-bio"
-                style={{ 
-                display: "block", 
-                marginBottom: "8px", 
-                fontWeight: "600",
-                color: "#2d3748"
-              }}>
-                Bio
-              </label>
-              <textarea
-                id="edit-bio"
-                value={editBio}
-                onChange={(e) => setEditBio(e.target.value)}
-                rows={4}
-                maxLength={500}
-                style={{
-                  width: "100%",
-                  padding: "12px 16px",
-                  border: "2px solid #e2e8f0",
-                  borderRadius: 8,
-                  fontSize: 16,
-                  resize: "vertical",
-                  boxSizing: "border-box"
-                }}
-              />
-              <div style={{ 
-                fontSize: "12px", 
-                color: "#666", 
-                marginTop: "4px",
-                textAlign: "right"
-              }}>
-                {editBio.length}/500
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "12px" }}>
-              <button
-                onClick={handleSaveProfile}
-                disabled={submitting || !editDisplayName.trim()}
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: submitting ? "#a0aec0" : "#006729",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 8,
-                  cursor: submitting ? "not-allowed" : "pointer",
-                  fontWeight: "600"
-                }}
-              >
-                {submitting ? "Saving..." : "Save"}
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                disabled={submitting}
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#718096",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 8,
-                  cursor: "pointer",
-                  fontWeight: "600"
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <div style={{ flex: 1 }}>
-                <h1 style={{ 
-                  margin: "0 0 8px 0", 
-                  color: "#1a202c", 
-                  fontSize: "32px",
-                  fontWeight: "700"
-                }}>
-                  {user.display_name}
-                </h1>
-                <p style={{ 
-                  color: "#666", 
-                  fontSize: "14px",
-                  margin: "0 0 16px 0"
-                }}>
-                  Joined {formatDate(user.date_joined)}
-                </p>
-              </div>
-              <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                {!isOwnProfile && (
-                  <button
-                    onClick={handleStartConversation}
-                    disabled={creatingRequest}
-                    style={{
-                      padding: "8px 16px",
-                      backgroundColor: creatingRequest ? "#a0aec0" : "#006729",
-                      color: "white",
-                      border: "none",
-                      borderRadius: 8,
-                      cursor: creatingRequest ? "not-allowed" : "pointer",
-                      fontWeight: "600",
-                      fontSize: "14px"
-                    }}
-                  >
-                    {creatingRequest ? "Sending..." : "Message"}
-                  </button>
-                )}
-                {isOwnProfile && (
-                  <button
-                    onClick={() => setIsEditingProfile(true)}
-                    style={{
-                      padding: "8px 16px",
-                      backgroundColor: "#006729",
-                      color: "white",
-                      border: "none",
-                      borderRadius: 8,
-                      cursor: "pointer",
-                      fontWeight: "600",
-                      fontSize: "14px"
-                    }}
-                  >
-                    Edit Profile
-                  </button>
-                )}
-              </div>
-            </div>
-            {user.bio ? (
-              <p style={{ 
-                color: "#2d3748", 
-                fontSize: "16px",
-                lineHeight: "1.6",
-                margin: "0",
-                whiteSpace: "pre-wrap"
-              }}>
-                {user.bio}
-              </p>
-            ) : (
-              <p style={{ 
-                color: "#999", 
-                fontSize: "16px",
-                fontStyle: "italic",
-                margin: "0"
-              }}>
-                {isOwnProfile ? "No bio yet. Click 'Edit Profile' to add one." : "No bio yet."}
-              </p>
-            )}
-          </>
         )}
-      </div>
 
-      {/* Posts Section */}
-      <div>
-        <h2 style={{ 
-          margin: "0 0 20px 0", 
-          color: "#1a202c", 
-          fontSize: "24px",
-          fontWeight: "600"
-        }}>
-          Posts ({posts.length})
-        </h2>
-
-        {posts.length === 0 ? (
-          <div style={{
-            backgroundColor: "white",
-            padding: "40px",
-            borderRadius: "8px",
-            textAlign: "center",
-            border: "1px solid #dee2e6",
-            color: "#666"
-          }}>
-            <p>{isOwnProfile ? "You haven't posted anything yet." : "This user hasn't posted anything yet."}</p>
-          </div>
-        ) : (
-          posts.map((post) => (
+        {/* Modal para conversation request */}
+        {showMessageDialog && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0,0,0,0.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 1000,
+            }}
+            onClick={() => {
+              if (!creatingRequest) {
+                setShowMessageDialog(false);
+                setRequestMessage("");
+              }
+            }}
+          >
             <div
-              key={post.id}
               style={{
                 backgroundColor: "white",
-                padding: "20px",
-                borderRadius: "8px",
-                marginBottom: "16px",
-                border: "1px solid #dee2e6",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
+                borderRadius: 18,
+                padding: 24,
+                maxWidth: 520,
+                width: "90%",
+                maxHeight: "80vh",
+                overflowY: "auto",
+                boxShadow: "0 18px 40px rgba(0,0,0,0.25)",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2
+                style={{
+                  margin: "0 0 10px 0",
+                  color: "#1a202c",
+                  fontSize: 20,
+                  fontWeight: 700,
+                }}
+              >
+                Send Conversation Request
+              </h2>
+              <p
+                style={{
+                  margin: "0 0 16px 0",
+                  color: "#4b5563",
+                  fontSize: 14,
+                }}
+              >
+                Add an optional message to let {user.display_name} know why
+                you&apos;d like to connect:
+              </p>
+              <textarea
+                value={requestMessage}
+                onChange={(e) => setRequestMessage(e.target.value)}
+                placeholder="Optional message..."
+                style={{
+                  width: "100%",
+                  padding: "12px 16px",
+                  border: "2px solid #e2e8f0",
+                  borderRadius: 10,
+                  fontSize: 14,
+                  resize: "vertical",
+                  minHeight: 110,
+                  maxHeight: 220,
+                  fontFamily: "inherit",
+                  backgroundColor: "#f9fafb",
+                  color: "#111827",
+                  boxSizing: "border-box",
+                }}
+                rows={4}
+              />
+              <div
+                style={{
+                  display: "flex",
+                  gap: 10,
+                  marginTop: 18,
+                  justifyContent: "flex-end",
+                }}
+              >
+                <button
+                  onClick={() => {
+                    setShowMessageDialog(false);
+                    setRequestMessage("");
+                  }}
+                  disabled={creatingRequest}
+                  style={{
+                    padding: "9px 18px",
+                    backgroundColor: "#6b7280",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 999,
+                    cursor: creatingRequest ? "not-allowed" : "pointer",
+                    fontWeight: 600,
+                    fontSize: 14,
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSendConversationRequest}
+                  disabled={creatingRequest}
+                  style={{
+                    padding: "9px 18px",
+                    backgroundColor: creatingRequest ? "#a0aec0" : "#006729",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 999,
+                    cursor: creatingRequest ? "not-allowed" : "pointer",
+                    fontWeight: 600,
+                    fontSize: 14,
+                  }}
+                >
+                  {creatingRequest ? "Sending..." : "Send Request"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Encabezado de perfil */}
+        <section
+          style={{
+            backgroundColor: "var(--card-bg)",
+            borderRadius: 22,
+            padding: 22,
+            boxShadow: "0 10px 24px rgba(0,0,0,0.06)",
+            border: "1px solid rgba(148,163,184,0.35)",
+          }}
+        >
+          {isEditingProfile ? (
+            <div>
+              <div style={{ marginBottom: 16 }}>
+                <label
+                  htmlFor="edit-display-name"
+                  style={{
+                    display: "block",
+                    marginBottom: 6,
+                    fontWeight: 600,
+                    color: "#111827",
+                    fontSize: 14,
+                  }}
+                >
+                  Display Name
+                </label>
+                <input
+                  id="edit-display-name"
+                  type="text"
+                  value={editDisplayName}
+                  onChange={(e) => setEditDisplayName(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    border: "2px solid #e2e8f0",
+                    borderRadius: 10,
+                    fontSize: 15,
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+              <div style={{ marginBottom: 14 }}>
+                <label
+                  htmlFor="edit-bio"
+                  style={{
+                    display: "block",
+                    marginBottom: 6,
+                    fontWeight: 600,
+                    color: "#111827",
+                    fontSize: 14,
+                  }}
+                >
+                  Bio
+                </label>
+                <textarea
+                  id="edit-bio"
+                  value={editBio}
+                  onChange={(e) => setEditBio(e.target.value)}
+                  rows={4}
+                  maxLength={500}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    border: "2px solid #e2e8f0",
+                    borderRadius: 10,
+                    fontSize: 15,
+                    resize: "vertical",
+                    boxSizing: "border-box",
+                  }}
+                />
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: "#6b7280",
+                    marginTop: 2,
+                    textAlign: "right",
+                  }}
+                >
+                  {editBio.length}/500
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={submitting || !editDisplayName.trim()}
+                  style={{
+                    padding: "9px 20px",
+                    backgroundColor: submitting ? "#a0aec0" : "#006729",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 999,
+                    cursor: submitting ? "not-allowed" : "pointer",
+                    fontWeight: 600,
+                    fontSize: 14,
+                  }}
+                >
+                  {submitting ? "Saving..." : "Save"}
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  disabled={submitting}
+                  style={{
+                    padding: "9px 20px",
+                    backgroundColor: "#6b7280",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 999,
+                    cursor: "pointer",
+                    fontWeight: 600,
+                    fontSize: 14,
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  gap: 16,
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <h1
+                    style={{
+                      margin: "0 0 6px 0",
+                      color: "var(--text-dark)",
+                      fontSize: 28,
+                      fontWeight: 900,
+                    }}
+                  >
+                    {user.display_name}
+                  </h1>
+                  <p
+                    style={{
+                      color: "#6b7280",
+                      fontSize: 13,
+                      margin: 0,
+                    }}
+                  >
+                    Joined {formatDate(user.date_joined)}
+                  </p>
+                </div>
+                <div style={{ display: "flex", gap: 10 }}>
+                  {!isOwnProfile && (
+                    <button
+                      onClick={handleStartConversation}
+                      disabled={creatingRequest}
+                      style={{
+                        padding: "8px 16px",
+                        backgroundColor: creatingRequest ? "#a0aec0" : "#006729",
+                        color: "white",
+                        border: "none",
+                        borderRadius: 999,
+                        cursor: creatingRequest ? "not-allowed" : "pointer",
+                        fontWeight: 600,
+                        fontSize: 14,
+                      }}
+                    >
+                      {creatingRequest ? "Sending..." : "Message"}
+                    </button>
+                  )}
+                  {isOwnProfile && (
+                    <button
+                      onClick={() => setIsEditingProfile(true)}
+                      style={{
+                        padding: "8px 16px",
+                        backgroundColor: "#006729",
+                        color: "white",
+                        border: "none",
+                        borderRadius: 999,
+                        cursor: "pointer",
+                        fontWeight: 600,
+                        fontSize: 14,
+                      }}
+                    >
+                      Edit Profile
+                    </button>
+                  )}
+                </div>
+              </div>
+              {user.bio ? (
+                <p
+                  style={{
+                    color: "#1f2937",
+                    fontSize: 15,
+                    lineHeight: 1.6,
+                    margin: "14px 0 0 0",
+                    whiteSpace: "pre-wrap",
+                  }}
+                >
+                  {user.bio}
+                </p>
+              ) : (
+                <p
+                  style={{
+                    color: "#9ca3af",
+                    fontSize: 15,
+                    fontStyle: "italic",
+                    margin: "14px 0 0 0",
+                  }}
+                >
+                  {isOwnProfile
+                    ? "No bio yet. Click “Edit Profile” to add one."
+                    : "No bio yet."}
+                </p>
+              )}
+            </>
+          )}
+        </section>
+
+        {/* Posts / Listings del usuario */}
+        <section>
+          <h2
+            style={{
+              margin: "0 0 14px 0",
+              color: "var(--text-dark)",
+              fontSize: 20,
+              fontWeight: 800,
+            }}
+          >
+            Posts ({posts.length})
+          </h2>
+
+          {posts.length === 0 ? (
+            <div
+              style={{
+                backgroundColor: "var(--card-bg)",
+                padding: 28,
+                borderRadius: 20,
+                textAlign: "center",
+                border: "1px solid rgba(148,163,184,0.35)",
+                color: "#6b7280",
+                fontSize: 14,
+                boxShadow: "0 8px 18px rgba(15,23,42,0.05)",
               }}
             >
-              {editingPost && editingPost.id === post.id ? (
-                <div>
-                  <div style={{ marginBottom: "16px" }}>
-                    <label 
-                      htmlFor={`edit-post-title-${post.id}`}
-                      style={{ 
-                      display: "block", 
-                      marginBottom: "8px", 
-                      fontWeight: "600",
-                      color: "#2d3748"
-                    }}>
-                      Title
-                    </label>
-                    <input
-                      id={`edit-post-title-${post.id}`}
-                      type="text"
-                      value={editPostTitle}
-                      onChange={(e) => setEditPostTitle(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "12px 16px",
-                        border: "2px solid #e2e8f0",
-                        borderRadius: 8,
-                        fontSize: 16,
-                        boxSizing: "border-box"
-                      }}
-                    />
-                  </div>
-                  <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
-                    <div style={{ flex: 1 }}>
-                      <label 
-                        htmlFor={`edit-post-type-${post.id}`}
-                        style={{ 
-                        display: "block", 
-                        marginBottom: "8px", 
-                        fontWeight: "600",
-                        color: "#2d3748"
-                      }}>
-                        Type
-                      </label>
-                      <select
-                        id={`edit-post-type-${post.id}`}
-                        value={editPostType}
-                        onChange={(e) => setEditPostType(e.target.value)}
+              {isOwnProfile
+                ? "You haven't posted anything yet."
+                : "This user hasn't posted anything yet."}
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {posts.map((post) => (
+                <div
+                  key={post.id}
+                  style={{
+                    backgroundColor: "#ffffff",
+                    padding: 18,
+                    borderRadius: 16,
+                    border: "1px solid rgba(226,232,240,1)",
+                    boxShadow: "0 4px 10px rgba(15,23,42,0.06)",
+                  }}
+                >
+                  {editingPost && editingPost.id === post.id ? (
+                    <div>
+                      <div style={{ marginBottom: 12 }}>
+                        <label
+                          htmlFor={`edit-post-title-${post.id}`}
+                          style={{
+                            display: "block",
+                            marginBottom: 6,
+                            fontWeight: 600,
+                            color: "#111827",
+                            fontSize: 14,
+                          }}
+                        >
+                          Title
+                        </label>
+                        <input
+                          id={`edit-post-title-${post.id}`}
+                          type="text"
+                          value={editPostTitle}
+                          onChange={(e) => setEditPostTitle(e.target.value)}
+                          style={{
+                            width: "100%",
+                            padding: "10px 14px",
+                            border: "2px solid #e2e8f0",
+                            borderRadius: 10,
+                            fontSize: 15,
+                            boxSizing: "border-box",
+                          }}
+                        />
+                      </div>
+                      <div
                         style={{
-                          width: "100%",
-                          padding: "12px 16px",
-                          border: "2px solid #e2e8f0",
-                          borderRadius: 8,
-                          fontSize: 16,
-                          boxSizing: "border-box"
+                          display: "flex",
+                          gap: 12,
+                          marginBottom: 12,
                         }}
                       >
-                        <option value="post">Post</option>
-                        <option value="event">Event</option>
-                        <option value="tutor">Tutoring</option>
-                        <option value="job">Job</option>
-                        <option value="resource">Resource</option>
-                      </select>
+                        <div style={{ flex: 1 }}>
+                          <label
+                            htmlFor={`edit-post-type-${post.id}`}
+                            style={{
+                              display: "block",
+                              marginBottom: 6,
+                              fontWeight: 600,
+                              color: "#111827",
+                              fontSize: 14,
+                            }}
+                          >
+                            Type
+                          </label>
+                          <select
+                            id={`edit-post-type-${post.id}`}
+                            value={editPostType}
+                            onChange={(e) => setEditPostType(e.target.value)}
+                            style={{
+                              width: "100%",
+                              padding: "10px 14px",
+                              border: "2px solid #e2e8f0",
+                              borderRadius: 10,
+                              fontSize: 15,
+                              boxSizing: "border-box",
+                            }}
+                          >
+                            <option value="post">Post</option>
+                            <option value="event">Event</option>
+                            <option value="tutor">Tutoring</option>
+                            <option value="job">Job</option>
+                            <option value="resource">Resource</option>
+                          </select>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <label
+                            htmlFor={`edit-post-modality-${post.id}`}
+                            style={{
+                              display: "block",
+                              marginBottom: 6,
+                              fontWeight: 600,
+                              color: "#111827",
+                              fontSize: 14,
+                            }}
+                          >
+                            Modality
+                          </label>
+                          <select
+                            id={`edit-post-modality-${post.id}`}
+                            value={editPostModality}
+                            onChange={(e) =>
+                              setEditPostModality(e.target.value)
+                            }
+                            style={{
+                              width: "100%",
+                              padding: "10px 14px",
+                              border: "2px solid #e2e8f0",
+                              borderRadius: 10,
+                              fontSize: 15,
+                              boxSizing: "border-box",
+                            }}
+                          >
+                            <option value="in-person">In-Person</option>
+                            <option value="online">Online</option>
+                            <option value="hybrid">Hybrid</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div style={{ marginBottom: 14 }}>
+                        <label
+                          htmlFor={`edit-post-description-${post.id}`}
+                          style={{
+                            display: "block",
+                            marginBottom: 6,
+                            fontWeight: 600,
+                            color: "#111827",
+                            fontSize: 14,
+                          }}
+                        >
+                          Description
+                        </label>
+                        <textarea
+                          id={`edit-post-description-${post.id}`}
+                          value={editPostDescription}
+                          onChange={(e) =>
+                            setEditPostDescription(e.target.value)
+                          }
+                          rows={5}
+                          style={{
+                            width: "100%",
+                            padding: "10px 14px",
+                            border: "2px solid #e2e8f0",
+                            borderRadius: 10,
+                            fontSize: 15,
+                            resize: "vertical",
+                            boxSizing: "border-box",
+                          }}
+                        />
+                      </div>
+                      <div style={{ display: "flex", gap: 10 }}>
+                        <button
+                          onClick={handleSavePost}
+                          disabled={
+                            submitting ||
+                            !editPostTitle.trim() ||
+                            !editPostDescription.trim()
+                          }
+                          style={{
+                            padding: "9px 20px",
+                            backgroundColor: submitting
+                              ? "#a0aec0"
+                              : "#006729",
+                            color: "white",
+                            border: "none",
+                            borderRadius: 999,
+                            cursor: submitting ? "not-allowed" : "pointer",
+                            fontWeight: 600,
+                            fontSize: 14,
+                          }}
+                        >
+                          {submitting ? "Saving..." : "Save"}
+                        </button>
+                        <button
+                          onClick={handleCancelPostEdit}
+                          disabled={submitting}
+                          style={{
+                            padding: "9px 20px",
+                            backgroundColor: "#6b7280",
+                            color: "white",
+                            border: "none",
+                            borderRadius: 999,
+                            cursor: "pointer",
+                            fontWeight: 600,
+                            fontSize: 14,
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <label 
-                        htmlFor={`edit-post-modality-${post.id}`}
-                        style={{ 
-                        display: "block", 
-                        marginBottom: "8px", 
-                        fontWeight: "600",
-                        color: "#2d3748"
-                      }}>
-                        Modality
-                      </label>
-                      <select
-                        id={`edit-post-modality-${post.id}`}
-                        value={editPostModality}
-                        onChange={(e) => setEditPostModality(e.target.value)}
+                  ) : (
+                    <>
+                      <div
                         style={{
-                          width: "100%",
-                          padding: "12px 16px",
-                          border: "2px solid #e2e8f0",
-                          borderRadius: 8,
-                          fontSize: 16,
-                          boxSizing: "border-box"
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          marginBottom: 8,
+                          gap: 12,
                         }}
                       >
-                        <option value="in-person">In-Person</option>
-                        <option value="online">Online</option>
-                        <option value="hybrid">Hybrid</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div style={{ marginBottom: "16px" }}>
-                    <label 
-                      htmlFor={`edit-post-description-${post.id}`}
-                      style={{ 
-                      display: "block", 
-                      marginBottom: "8px", 
-                      fontWeight: "600",
-                      color: "#2d3748"
-                    }}>
-                      Description
-                    </label>
-                    <textarea
-                      id={`edit-post-description-${post.id}`}
-                      value={editPostDescription}
-                      onChange={(e) => setEditPostDescription(e.target.value)}
-                      rows={6}
-                      style={{
-                        width: "100%",
-                        padding: "12px 16px",
-                        border: "2px solid #e2e8f0",
-                        borderRadius: 8,
-                        fontSize: 16,
-                        resize: "vertical",
-                        boxSizing: "border-box"
-                      }}
-                    />
-                  </div>
-                  <div style={{ display: "flex", gap: "12px" }}>
-                    <button
-                      onClick={handleSavePost}
-                      disabled={submitting || !editPostTitle.trim() || !editPostDescription.trim()}
-                      style={{
-                        padding: "10px 20px",
-                        backgroundColor: submitting ? "#a0aec0" : "#006729",
-                        color: "white",
-                        border: "none",
-                        borderRadius: 8,
-                        cursor: submitting ? "not-allowed" : "pointer",
-                        fontWeight: "600"
-                      }}
-                    >
-                      {submitting ? "Saving..." : "Save"}
-                    </button>
-                    <button
-                      onClick={handleCancelPostEdit}
-                      disabled={submitting}
-                      style={{
-                        padding: "10px 20px",
-                        backgroundColor: "#718096",
-                        color: "white",
-                        border: "none",
-                        borderRadius: 8,
-                        cursor: "pointer",
-                        fontWeight: "600"
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    marginBottom: "12px"
-                  }}>
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{ 
-                        margin: "0 0 8px 0", 
-                        color: "#1a202c", 
-                        fontSize: "18px",
-                        fontWeight: "600"
-                      }}>
-                        {post.title}
-                      </h3>
-                      <div style={{ 
-                        color: "#666", 
-                        fontSize: "14px",
-                        display: "flex",
-                        gap: "12px",
-                        alignItems: "center"
-                      }}>
-                        <span>{formatDate(post.created_at)}</span>
-                        {post.type && (
-                          <span style={{
-                            backgroundColor: "#e2e8f0",
-                            padding: "2px 8px",
-                            borderRadius: "4px",
-                            fontSize: "12px",
-                            textTransform: "capitalize"
-                          }}>
-                            {post.type}
+                        <div style={{ flex: 1 }}>
+                          <h3
+                            style={{
+                              margin: "0 0 4px 0",
+                              color: "#111827",
+                              fontSize: 17,
+                              fontWeight: 700,
+                            }}
+                          >
+                            {post.title}
+                          </h3>
+                          <div
+                            style={{
+                              color: "#6b7280",
+                              fontSize: 13,
+                              display: "flex",
+                              gap: 10,
+                              alignItems: "center",
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <span>{formatDate(post.created_at)}</span>
+                            {post.type && (
+                              <span
+                                style={{
+                                  backgroundColor: "#e5e7eb",
+                                  padding: "2px 8px",
+                                  borderRadius: 999,
+                                  fontSize: 11,
+                                  textTransform: "capitalize",
+                                }}
+                              >
+                                {post.type}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {isOwnProfile && (
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: 6,
+                              flexShrink: 0,
+                            }}
+                          >
+                            <button
+                              onClick={() => handleEditPost(post)}
+                              style={{
+                                padding: "6px 10px",
+                                backgroundColor: "#22c55e",
+                                color: "white",
+                                border: "none",
+                                borderRadius: 999,
+                                cursor: "pointer",
+                                fontSize: 12,
+                                fontWeight: 600,
+                              }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeletePost(post.id)}
+                              style={{
+                                padding: "6px 10px",
+                                backgroundColor: "#ef4444",
+                                color: "white",
+                                border: "none",
+                                borderRadius: 999,
+                                cursor: "pointer",
+                                fontSize: 12,
+                                fontWeight: 600,
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      <p
+                        style={{
+                          color: "#1f2937",
+                          fontSize: 14,
+                          lineHeight: 1.6,
+                          margin: "0 0 8px 0",
+                          whiteSpace: "pre-wrap",
+                        }}
+                      >
+                        {post.description}
+                      </p>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: 10,
+                          marginTop: 4,
+                          fontSize: 13,
+                          color: "#6b7280",
+                        }}
+                      >
+                        {post.org_name && (
+                          <span>Organization: {post.org_name}</span>
+                        )}
+                        {post.modality && (
+                          <span>Modality: {post.modality}</span>
+                        )}
+                        {post.rsvp_count > 0 && (
+                          <span>
+                            {post.rsvp_count} RSVP
+                            {post.rsvp_count !== 1 ? "s" : ""}
                           </span>
                         )}
                       </div>
-                    </div>
-                    {isOwnProfile && (
-                      <div style={{ display: "flex", gap: "8px" }}>
-                        <button
-                          onClick={() => handleEditPost(post)}
-                          style={{
-                            padding: "6px 12px",
-                            backgroundColor: "#28a745",
-                            color: "white",
-                            border: "none",
-                            borderRadius: 4,
-                            cursor: "pointer",
-                            fontSize: "12px",
-                            fontWeight: "600"
-                          }}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeletePost(post.id)}
-                          style={{
-                            padding: "6px 12px",
-                            backgroundColor: "#dc3545",
-                            color: "white",
-                            border: "none",
-                            borderRadius: 4,
-                            cursor: "pointer",
-                            fontSize: "12px",
-                            fontWeight: "600"
-                          }}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  <p style={{ 
-                    color: "#2d3748", 
-                    fontSize: "15px",
-                    lineHeight: "1.6",
-                    margin: "0 0 12px 0",
-                    whiteSpace: "pre-wrap"
-                  }}>
-                    {post.description}
-                  </p>
-                  {post.org_name && (
-                    <div style={{ 
-                      color: "#666", 
-                      fontSize: "14px",
-                      marginTop: "8px"
-                    }}>
-                      Organization: {post.org_name}
-                    </div>
+                    </>
                   )}
-                  {post.modality && (
-                    <div style={{ 
-                      color: "#666", 
-                      fontSize: "14px"
-                    }}>
-                      Modality: {post.modality}
-                    </div>
-                  )}
-                  {post.rsvp_count > 0 && (
-                    <div style={{ 
-                      color: "#666", 
-                      fontSize: "14px",
-                      marginTop: "8px"
-                    }}>
-                      {post.rsvp_count} RSVP{post.rsvp_count !== 1 ? 's' : ''}
-                    </div>
-                  )}
-                </>
-              )}
+                </div>
+              ))}
             </div>
-          ))
-        )}
-      </div>
+          )}
+        </section>
       </div>
     </main>
   );
 }
-
-
-
