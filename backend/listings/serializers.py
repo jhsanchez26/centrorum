@@ -7,12 +7,18 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
 class ListingSerializer(serializers.ModelSerializer):
     org_name = serializers.CharField(source="org.name", read_only=True)
-    rsvp_count = serializers.IntegerField(source="rsvps.count", read_only=True)
+    rsvp_count = serializers.SerializerMethodField()
     going_count = serializers.SerializerMethodField()
     interested_count = serializers.SerializerMethodField()
     not_going_count = serializers.SerializerMethodField()
     user_rsvp_status = serializers.SerializerMethodField()
     created_by = UserSerializer(read_only=True)
+    
+    def get_rsvp_count(self, obj):
+        # Use annotated field if available (for ordering), otherwise compute it
+        if hasattr(obj, 'rsvp_count'):
+            return obj.rsvp_count
+        return obj.rsvps.count()
     
     def get_going_count(self, obj):
         return obj.rsvps.filter(status='going').count()

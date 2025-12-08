@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Count
 from .models import Organization, Listing, RSVP
 from .serializers import OrganizationSerializer, ListingSerializer, RSVPSerializer
 
@@ -27,6 +28,11 @@ class ListingViewSet(viewsets.ModelViewSet):
     search_fields = ["title","description","department","course_code","modality","type","created_by__display_name"]
     ordering_fields = ['created_at', 'rsvp_count', 'title']
     ordering = ['-created_at']
+    
+    def get_queryset(self):
+        """Annotate queryset with rsvp_count for ordering"""
+        queryset = Listing.objects.annotate(rsvp_count=Count('rsvps'))
+        return queryset
     
     def get_serializer_context(self):
         context = super().get_serializer_context()
