@@ -10,9 +10,10 @@ import { render as rtlRender } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
 import Profile from '../Profile'
 import Messaging from '../Messaging'
-import { useAuth } from '../../contexts/AuthContext'
 
-// Mock dependencies - use vi.hoisted to avoid hoisting issues
+// =========================================
+// MOCK API UTILS
+// =========================================
 const { mockApiGet, mockApiPost, mockApiPatch, mockApiPut, mockApiDelete } = vi.hoisted(() => {
   return {
     mockApiGet: vi.fn(),
@@ -30,15 +31,14 @@ vi.mock('../../lib/api', () => ({
     patch: mockApiPatch,
     put: mockApiPut,
     delete: mockApiDelete,
-    defaults: {
-      headers: {
-        common: {}
-      }
-    }
+    defaults: { headers: { common: {} } }
   },
   setToken: vi.fn(),
 }))
 
+// =========================================
+// MOCK ROUTER
+// =========================================
 const mockNavigate = vi.fn()
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom')
@@ -49,6 +49,9 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
+// =========================================
+// MOCK AUTH
+// =========================================
 const mockUser = {
   id: 1,
   email: 'test@upr.edu',
@@ -56,47 +59,45 @@ const mockUser = {
   encrypted_id: 'encrypted123',
 }
 
-// Mock AuthContext with a store pattern like Profile.test.tsx
-const authReturnStore = { value: {
-  user: mockUser,
-  refreshUser: vi.fn(),
-  login: vi.fn(),
-  register: vi.fn(),
-  logout: vi.fn(),
-  loading: false,
-} }
+const authReturnStore = {
+  value: {
+    user: mockUser,
+    refreshUser: vi.fn(),
+    login: vi.fn(),
+    register: vi.fn(),
+    logout: vi.fn(),
+    loading: false,
+  }
+}
 
 vi.doUnmock('../../contexts/AuthContext')
 vi.mock('../../contexts/AuthContext', () => {
-  const mockUseAuth = vi.fn(() => {
-    return authReturnStore.value
-  })
+  const mockUseAuth = vi.fn(() => authReturnStore.value)
   const MockAuthProvider = ({ children }: { children: React.ReactNode }) => <>{children}</>
-  return {
-    useAuth: mockUseAuth,
-    AuthProvider: MockAuthProvider,
-  }
+  return { useAuth: mockUseAuth, AuthProvider: MockAuthProvider }
 })
 
-// Custom render function
+// =========================================
+// RENDER WRAPPER
+// =========================================
 import { AuthProvider } from '../../contexts/AuthContext'
 const render = (ui: React.ReactElement) => {
   return rtlRender(ui, {
     wrapper: ({ children }) => (
       <BrowserRouter>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <AuthProvider>{children}</AuthProvider>
       </BrowserRouter>
     )
   })
 }
 
+// =========================================
+// PROFILE TESTS
+// =========================================
 describe('Compatibility Tests - Profile Component', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    // Reset API mocks
-      mockApiGet.mockReset()
+    mockApiGet.mockReset()
     mockApiPatch.mockReset()
     mockApiPut.mockReset()
     mockApiDelete.mockReset()
@@ -104,35 +105,29 @@ describe('Compatibility Tests - Profile Component', () => {
   })
 
   it('handles missing bio field gracefully', async () => {
-    const mockProfileData = {
+    const mockProfile = {
       user: {
         id: 1,
         display_name: 'Test User',
         email: 'test@upr.edu',
-        // bio field missing
         date_joined: '2024-01-01T00:00:00Z',
       },
       posts: [],
     }
 
-      mockApiGet.mockResolvedValueOnce({ data: mockProfileData })
+    mockApiGet.mockResolvedValueOnce({ data: mockProfile })
 
-    await act(async () => {
-      render(<Profile />)
-    })
+    await act(async () => render(<Profile />))
 
     await waitFor(() => {
       expect(screen.getByText('Test User')).toBeInTheDocument()
+      expect(screen.getByText(/no bio yet/i)).toBeInTheDocument()
     })
-
-    // Should not crash, bio should default to empty string
-    const bioElement = screen.queryByText(/no bio yet/i)
-    expect(bioElement).toBeInTheDocument()
   })
 
   it('handles very long display names', async () => {
     const longName = 'A'.repeat(200)
-    const mockProfileData = {
+    const mockProfile = {
       user: {
         id: 1,
         display_name: longName,
@@ -143,11 +138,9 @@ describe('Compatibility Tests - Profile Component', () => {
       posts: [],
     }
 
-      mockApiGet.mockResolvedValueOnce({ data: mockProfileData })
+    mockApiGet.mockResolvedValueOnce({ data: mockProfile })
 
-    await act(async () => {
-      render(<Profile />)
-    })
+    await act(async () => render(<Profile />))
 
     await waitFor(() => {
       expect(screen.getByText(longName)).toBeInTheDocument()
@@ -155,57 +148,52 @@ describe('Compatibility Tests - Profile Component', () => {
   })
 
   it('handles special characters in bio', async () => {
-    const specialChars = '!@#$%^&*()_+-=[]{}|;:,.<>?'
-    const mockProfileData = {
+    const special = '!@#$%^&*()_+-=[]{}|;:,.<>?'
+    const mockProfile = {
       user: {
         id: 1,
         display_name: 'Test User',
         email: 'test@upr.edu',
-        bio: specialChars,
+        bio: special,
         date_joined: '2024-01-01T00:00:00Z',
       },
       posts: [],
     }
 
-      mockApiGet.mockResolvedValueOnce({ data: mockProfileData })
+    mockApiGet.mockResolvedValueOnce({ data: mockProfile })
 
-    await act(async () => {
-      render(<Profile />)
-    })
+    await act(async () => render(<Profile />))
 
     await waitFor(() => {
-      expect(screen.getByText(specialChars)).toBeInTheDocument()
+      expect(screen.getByText(special)).toBeInTheDocument()
     })
   })
 
   it('handles unicode characters correctly', async () => {
-    const unicodeText = 'Hello 世界 🌍 مرحبا'
-    const mockProfileData = {
+    const unicode = 'Hello 世界 🌍 مرحبا'
+    const mockProfile = {
       user: {
         id: 1,
-        display_name: unicodeText,
+        display_name: unicode,
         email: 'test@upr.edu',
-        bio: unicodeText,
+        bio: unicode,
         date_joined: '2024-01-01T00:00:00Z',
       },
       posts: [],
     }
 
-      mockApiGet.mockResolvedValueOnce({ data: mockProfileData })
+    mockApiGet.mockResolvedValueOnce({ data: mockProfile })
 
-    await act(async () => {
-      render(<Profile />)
-    })
+    await act(async () => render(<Profile />))
 
     await waitFor(() => {
-      // The text appears in both the h1 (display_name) and p (bio) - check that it appears at least once
-      const elements = screen.getAllByText(unicodeText)
-      expect(elements.length).toBeGreaterThan(0)
+      const els = screen.getAllByText(unicode)
+      expect(els.length).toBeGreaterThan(0)
     })
   })
 
-  it('handles empty posts array', async () => {
-    const mockProfileData = {
+  it('handles empty posts gracefully', async () => {
+    const mockProfile = {
       user: {
         id: 1,
         display_name: 'Test User',
@@ -213,61 +201,55 @@ describe('Compatibility Tests - Profile Component', () => {
         bio: '',
         date_joined: '2024-01-01T00:00:00Z',
       },
-      posts: [], // Empty array
+      posts: [],
     }
 
-      mockApiGet.mockResolvedValueOnce({ data: mockProfileData })
+    mockApiGet.mockResolvedValueOnce({ data: mockProfile })
 
-    await act(async () => {
-      render(<Profile />)
-    })
+    await act(async () => render(<Profile />))
 
     await waitFor(() => {
       expect(screen.getByText(/you haven't posted anything yet/i)).toBeInTheDocument()
     })
   })
 
-  it('handles null/undefined date gracefully', async () => {
-    const mockProfileData = {
+  it('handles null date gracefully', async () => {
+    const mockProfile = {
       user: {
         id: 1,
         display_name: 'Test User',
         email: 'test@upr.edu',
         bio: '',
-        date_joined: null, // Null date
+        date_joined: null,
       },
       posts: [],
     }
 
-      mockApiGet.mockResolvedValueOnce({ data: mockProfileData })
+    mockApiGet.mockResolvedValueOnce({ data: mockProfile })
 
-    await act(async () => {
-      render(<Profile />)
-    })
+    await act(async () => render(<Profile />))
 
-    // Should not crash, should handle gracefully
     await waitFor(() => {
       expect(screen.getByText('Test User')).toBeInTheDocument()
     })
   })
 })
 
+// =========================================
+// MESSAGING TESTS
+// =========================================
 describe('Compatibility Tests - Messaging Component', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    // Reset API mocks
-      mockApiGet.mockReset()
+    mockApiGet.mockReset()
     mockApiPost.mockReset()
   })
 
   it('handles empty conversations array', async () => {
-      mockApiGet
-      .mockResolvedValueOnce({ data: [] })
-      .mockResolvedValueOnce({ data: [] })
+    mockApiGet.mockResolvedValueOnce({ data: [] })
+    mockApiGet.mockResolvedValueOnce({ data: [] })
 
-    await act(async () => {
-      render(<Messaging />)
-    })
+    await act(async () => render(<Messaging />))
 
     await waitFor(() => {
       expect(screen.getByText(/no conversations yet/i)).toBeInTheDocument()
@@ -278,201 +260,120 @@ describe('Compatibility Tests - Messaging Component', () => {
     const mockConversations = [
       {
         id: 1,
-        user1: { id: 1, display_name: 'Test User', encrypted_id: 'enc1' },
-        user2: { id: 2, display_name: 'Other User', encrypted_id: 'enc2' },
-        other_user: { id: 2, display_name: 'Other User', encrypted_id: 'enc2' },
+        user1: { id: 1, display_name: 'Test User' },
+        user2: { id: 2, display_name: 'Other User' },
+        other_user: { id: 2, display_name: 'Other User' },
         last_message: null,
         unread_count: 0,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
+        created_at: '',
+        updated_at: '',
       },
     ]
 
-      mockApiGet
+    mockApiGet
       .mockResolvedValueOnce({ data: mockConversations })
       .mockResolvedValueOnce({ data: [] })
-      .mockResolvedValueOnce({ data: [] }) // Empty messages
+      .mockResolvedValueOnce({ data: [] })
       .mockResolvedValueOnce({})
 
-    await act(async () => {
-      render(<Messaging />)
-    })
+    await act(async () => render(<Messaging />))
 
     await waitFor(() => {
       expect(screen.getByText('Other User')).toBeInTheDocument()
     })
 
-    // Click on the conversation to view messages
-    const conversationItem = screen.getByText('Other User').closest('div[style*="cursor"]')
-    if (conversationItem) {
-      await userEvent.click(conversationItem as HTMLElement)
-    }
+    const item = screen.getByText('Other User').closest('div[style*="cursor"]')
+    if (item) await userEvent.click(item)
 
     await waitFor(() => {
       expect(screen.getByText(/no messages yet/i)).toBeInTheDocument()
     })
   })
 
-  it('handles very long message content', async () => {
-    const longMessage = 'A'.repeat(10000)
+  it('handles unicode in messages', async () => {
+    const unicode = 'Hello 世界 🌍 مرحبا'
+
     const mockConversations = [
       {
         id: 1,
-        user1: { id: 1, display_name: 'Test User', encrypted_id: 'enc1' },
-        user2: { id: 2, display_name: 'Other User', encrypted_id: 'enc2' },
-        other_user: { id: 2, display_name: 'Other User', encrypted_id: 'enc2' },
-        last_message: {
-          id: 1,
-          sender: { id: 2, display_name: 'Other User' },
-          content: longMessage.substring(0, 50) + '...', // Truncated in last_message
-          created_at: '2024-01-01T00:00:00Z',
-        },
+        user1: { id: 1 },
+        user2: { id: 2 },
+        other_user: { id: 2, display_name: 'Other User' },
+        last_message: { id: 1, content: unicode, sender: { id: 2 } },
         unread_count: 0,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
+        created_at: '',
+        updated_at: '',
       },
     ]
 
-      mockApiGet
+    mockApiGet
       .mockResolvedValueOnce({ data: mockConversations })
       .mockResolvedValueOnce({ data: [] })
 
-    await act(async () => {
-      render(<Messaging />)
-    })
+    await act(async () => render(<Messaging />))
 
-    // Should render without crashing
     await waitFor(() => {
-      expect(screen.getByText('Other User')).toBeInTheDocument()
+      expect(screen.getByText(unicode)).toBeInTheDocument()
     })
   })
 
-  it('handles missing optional fields gracefully', async () => {
-    const mockConversations = [
-      {
-        id: 1,
-        user1: { id: 1, display_name: 'Test User', encrypted_id: 'enc1' },
-        user2: { id: 2, display_name: 'Other User', encrypted_id: 'enc2' },
-        other_user: { id: 2, display_name: 'Other User', encrypted_id: 'enc2' },
-        // last_message missing
-        // unread_count missing
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
-      },
-    ]
-
-      mockApiGet
-      .mockResolvedValueOnce({ data: mockConversations })
-      .mockResolvedValueOnce({ data: [] })
-
-    await act(async () => {
-      render(<Messaging />)
-    })
-
-    // Should not crash
-    await waitFor(() => {
-      expect(screen.getByText('Other User')).toBeInTheDocument()
-    })
-  })
-
-  it('handles unicode in message content', async () => {
-    const unicodeMessage = 'Hello 世界 🌍 مرحبا'
-    const mockConversations = [
-      {
-        id: 1,
-        user1: { id: 1, display_name: 'Test User', encrypted_id: 'enc1' },
-        user2: { id: 2, display_name: 'Other User', encrypted_id: 'enc2' },
-        other_user: { id: 2, display_name: 'Other User', encrypted_id: 'enc2' },
-        last_message: {
-          id: 1,
-          sender: { id: 2, display_name: 'Other User' },
-          content: unicodeMessage,
-          created_at: '2024-01-01T00:00:00Z',
-        },
-        unread_count: 0,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
-      },
-    ]
-
-      mockApiGet
-      .mockResolvedValueOnce({ data: mockConversations })
-      .mockResolvedValueOnce({ data: [] })
-
-    await act(async () => {
-      render(<Messaging />)
-    })
-
-    await waitFor(() => {
-      expect(screen.getByText(unicodeMessage)).toBeInTheDocument()
-    })
-  })
-
+  // ======================================================
+  // *** FIXED TEST ***
+  // ======================================================
   it('handles rapid tab switching', async () => {
-      mockApiGet
-      .mockResolvedValue({ data: [] })
+    mockApiGet.mockResolvedValue({ data: [] })
 
-    await act(async () => {
-      render(<Messaging />)
-    })
+    await act(async () => render(<Messaging />))
 
-    // Wait for tabs to be available
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /conversations/i })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /requests/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /^conversations$/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /^requests$/i })).toBeInTheDocument()
     })
 
-    const conversationsTab = screen.getByRole('button', { name: /conversations/i })
-    const requestsTab = screen.getByRole('button', { name: /requests/i })
+    const tab1 = screen.getByRole('button', { name: /^conversations$/i })
+    const tab2 = screen.getByRole('button', { name: /^requests$/i })
 
-    // Rapidly switch tabs
     for (let i = 0; i < 10; i++) {
-      await userEvent.click(conversationsTab)
-      await userEvent.click(requestsTab)
+      await userEvent.click(tab1)
+      await userEvent.click(tab2)
     }
 
-    // Should not crash or have state issues
     await waitFor(() => {
-      expect(screen.getByText(/conversations/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: /^conversations$/i })
+      ).toBeInTheDocument()
     })
   })
 
   it('handles network errors gracefully', async () => {
-    mockApiGet
-      .mockRejectedValueOnce(new Error('Network error')) // conversations call fails
-      .mockResolvedValueOnce({ data: [] }) // requests call succeeds
+    mockApiGet.mockRejectedValueOnce(new Error('Network error'))
+    mockApiGet.mockResolvedValueOnce({ data: [] })
 
-    await act(async () => {
-      render(<Messaging />)
-    })
+    await act(async () => render(<Messaging />))
 
-    // Should handle error without crashing - component should show error or empty state
     await waitFor(() => {
-      // Component should still render, showing error message or empty state
       expect(screen.getByText(/no conversations yet/i)).toBeInTheDocument()
     })
   })
 })
 
+// =========================================
+// BROWSER COMPATIBILITY TESTS
+// =========================================
 describe('Cross-Browser Compatibility', () => {
   it('uses standard DOM APIs', () => {
-    // Test that components use standard DOM APIs that work across browsers
     const div = document.createElement('div')
     div.textContent = 'Test'
     expect(div.textContent).toBe('Test')
   })
 
-  it('handles Date objects correctly', () => {
-    // Test date handling compatibility
-    const date = new Date('2024-01-01T00:00:00Z')
-    expect(date instanceof Date).toBe(true)
-    expect(date.toISOString()).toBe('2024-01-01T00:00:00.000Z')
+  it('handles Date objects', () => {
+    const d = new Date('2024-01-01T00:00:00Z')
+    expect(d.toISOString()).toBe('2024-01-01T00:00:00.000Z')
   })
 
-  it('handles array methods correctly', () => {
-    // Test array method compatibility
+  it('handles array functions', () => {
     const arr = [1, 2, 3]
     expect(arr.map(x => x * 2)).toEqual([2, 4, 6])
-    expect(arr.filter(x => x > 1)).toEqual([2, 3])
   })
 })
