@@ -31,7 +31,7 @@ describe('Listings Component', () => {
     expect(screen.getByPlaceholderText('Search listings...')).toBeInTheDocument()
     expect(screen.getByText('All Types')).toBeInTheDocument()
     expect(screen.getByText('All Modalities')).toBeInTheDocument()
-    expect(screen.getByText('Create a new post')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /create post/i })).toBeInTheDocument()
   })
 
   it('displays listings after loading', async () => {
@@ -166,10 +166,19 @@ describe('Listings Component', () => {
       expect(screen.getByText('Test Event')).toBeInTheDocument()
     })
     
+    // Open the create post modal
+    const createButton = screen.getByRole('button', { name: /create post/i })
+    await user.click(createButton)
+    
+    // Wait for modal to open and form to be visible
+    await waitFor(() => {
+      expect(screen.getByText('Create a new post')).toBeInTheDocument()
+    })
+    
     // Fill out new listing form
     const titleInput = screen.getByPlaceholderText('Post title...')
     const descriptionInput = screen.getByPlaceholderText('Post content...')
-    const submitButton = screen.getByRole('button', { name: /post/i })
+    const submitButton = screen.getByRole('button', { name: /^post$/i })
     
     await user.type(titleInput, 'New Event')
     await user.type(descriptionInput, 'A new event description')
@@ -196,8 +205,17 @@ describe('Listings Component', () => {
       expect(screen.getByText('Test Event')).toBeInTheDocument()
     })
     
+    // Open the create post modal
+    const createButton = screen.getByRole('button', { name: /create post/i })
+    await user.click(createButton)
+    
+    // Wait for modal to open
+    await waitFor(() => {
+      expect(screen.getByText('Create a new post')).toBeInTheDocument()
+    })
+    
     // Try to submit empty form
-    const submitButton = screen.getByRole('button', { name: /post/i })
+    const submitButton = screen.getByRole('button', { name: /^post$/i })
     expect(submitButton).toBeDisabled()
     
     await user.click(submitButton)
