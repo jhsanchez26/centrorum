@@ -47,6 +47,7 @@ export default function Messaging() {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<"conversations" | "requests">("conversations");
@@ -71,13 +72,17 @@ export default function Messaging() {
   }, []);
 
   const fetchMessages = useCallback(
-    async (conversationId: number) => {
+    async (conversationId: number, isRefresh: boolean = false) => {
       try {
-        setLoadingMessages(true);
+        // Only show loading state on initial load, not on refresh
+        if (!isRefresh) {
+          setLoadingMessages(true);
+        }
         const response = await api.get(`/auth/conversations/${conversationId}/messages/`);
         setMessages(response.data);
         await api.post(`/auth/conversations/${conversationId}/mark-read/`);
         await fetchConversations();
+        setIsInitialLoad(false);
       } catch (err: any) {
         setError("Failed to load messages");
       } finally {
@@ -104,7 +109,8 @@ export default function Messaging() {
         fetchConversationRequests();
       }
       if (selectedConversation) {
-        fetchMessages(selectedConversation.id);
+        // Pass true to indicate this is a refresh, not initial load
+        fetchMessages(selectedConversation.id, true);
       }
     }, 10000);
 
@@ -114,7 +120,8 @@ export default function Messaging() {
   const handleSelectConversation = async (conversation: Conversation) => {
     setSelectedConversation(conversation);
     setActiveTab("conversations");
-    await fetchMessages(conversation.id);
+    setIsInitialLoad(true);
+    await fetchMessages(conversation.id, false);
   };
 
   const handleSendMessage = async () => {
@@ -147,7 +154,8 @@ export default function Messaging() {
 
       if (response.data.conversation) {
         setSelectedConversation(response.data.conversation);
-        await fetchMessages(response.data.conversation.id);
+        setIsInitialLoad(true);
+        await fetchMessages(response.data.conversation.id, false);
       }
 
       setActiveTab("conversations");
@@ -857,7 +865,7 @@ export default function Messaging() {
                       "linear-gradient(to bottom, #f9fafb 0%, #ffffff 40%)",
                   }}
                 >
-                  {loadingMessages ? (
+                  {loadingMessages && isInitialLoad ? (
                     <div
                       style={{
                         textAlign: "center",
