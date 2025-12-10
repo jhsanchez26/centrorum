@@ -34,6 +34,7 @@ export default function Listings() {
   const [postModality, setPostModality] = useState("in-person");
   const [submitting, setSubmitting] = useState(false);
   const [editingPost, setEditingPost] = useState<Listing | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { user } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -110,6 +111,7 @@ export default function Listings() {
       setPostTitle("");
       setPostType("post");
       setPostModality("in-person");
+      setIsModalOpen(false);
     } catch (err: any) {
       setError(editingPost ? "Failed to update post" : "Failed to create post");
     } finally {
@@ -123,6 +125,25 @@ export default function Listings() {
     setPostType(post.type);
     setPostModality(post.modality);
     setNewPost(post.description);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenCreateModal = () => {
+    setEditingPost(null);
+    setNewPost("");
+    setPostTitle("");
+    setPostType("post");
+    setPostModality("in-person");
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingPost(null);
+    setNewPost("");
+    setPostTitle("");
+    setPostType("post");
+    setPostModality("in-person");
   };
 
   const handleDeletePost = async (postId: number) => {
@@ -137,11 +158,7 @@ export default function Listings() {
   };
 
   const handleCancelEdit = () => {
-    setEditingPost(null);
-    setNewPost("");
-    setPostTitle("");
-    setPostType("post");
-    setPostModality("in-person");
+    handleCloseModal();
   };
 
   const handleRSVP = async (listingId: number, status: string) => {
@@ -198,50 +215,93 @@ export default function Listings() {
           gap: 22,
         }}
       >
-        {/* Header text */}
+        {/* Header with Create Post Button */}
         <div
           style={{
             display: "flex",
-            flexDirection: "column",
-            gap: 6,
+            justifyContent: "space-between",
+            alignItems: "flex-start",
             marginBottom: 6,
+            gap: 20,
           }}
         >
-          <p
+          <div
             style={{
-              margin: 0,
-              fontSize: 13,
-              letterSpacing: "0.16em",
-              textTransform: "uppercase",
-              color: "var(--accent-green)",
-              fontWeight: 600,
+              display: "flex",
+              flexDirection: "column",
+              gap: 6,
+              flex: 1,
             }}
           >
-            Browse
-          </p>
-          <h1
+            <p
+              style={{
+                margin: 0,
+                fontSize: 13,
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                color: "var(--accent-green)",
+                fontWeight: 600,
+              }}
+            >
+              Browse
+            </p>
+            <h1
+              style={{
+                margin: 0,
+                fontSize: 32,
+                fontWeight: 900,
+                color: "var(--text-dark)",
+              }}
+            >
+              Listings
+            </h1>
+            <p
+              style={{
+                margin: 0,
+                fontSize: 14,
+                lineHeight: 1.6,
+                color: "#4b5563",
+                maxWidth: 640,
+              }}
+            >
+              Explore posts, events, tutoring opportunities, jobs, and resources
+              shared across the UPRM community. Use filters to quickly find what
+              you&apos;re looking for or create your own post.
+            </p>
+          </div>
+          {/* Create Post Button - Top Right */}
+          <button
+            onClick={handleOpenCreateModal}
             style={{
-              margin: 0,
-              fontSize: 32,
-              fontWeight: 900,
-              color: "var(--text-dark)",
-            }}
-          >
-            Listings
-          </h1>
-          <p
-            style={{
-              margin: 0,
+              padding: "12px 24px",
+              backgroundColor: "#006729",
+              color: "white",
+              border: "none",
+              borderRadius: 999,
+              cursor: "pointer",
               fontSize: 14,
-              lineHeight: 1.6,
-              color: "#4b5563",
-              maxWidth: 640,
+              fontWeight: 600,
+              boxShadow: "0 3px 7px rgba(0,0,0,0.18)",
+              transition: "all 0.18s ease",
+              whiteSpace: "nowrap",
+              alignSelf: "flex-start",
+            }}
+            onMouseEnter={(e) => {
+              (e.target as HTMLButtonElement).style.backgroundColor = "#004d20";
+              (e.target as HTMLButtonElement).style.transform =
+                "translateY(-1px)";
+              (e.target as HTMLButtonElement).style.boxShadow =
+                "0 5px 10px rgba(0,0,0,0.20)";
+            }}
+            onMouseLeave={(e) => {
+              (e.target as HTMLButtonElement).style.backgroundColor = "#006729";
+              (e.target as HTMLButtonElement).style.transform = "translateY(0)";
+              (e.target as HTMLButtonElement).style.boxShadow =
+                "0 3px 7px rgba(0,0,0,0.18)";
             }}
           >
-            Explore posts, events, tutoring opportunities, jobs, and resources
-            shared across the UPRM community. Use filters to quickly find what
-            you&apos;re looking for or create your own post.
-          </p>
+            + Create Post
+          </button>
         </div>
 
         {/* Search + filters card */}
@@ -478,264 +538,324 @@ export default function Listings() {
           </div>
         )}
 
-        {/* Create new post card */}
-        <section
-          style={{
-            backgroundColor: "var(--card-bg)",
-            padding: 22,
-            borderRadius: 20,
-            boxShadow: "0 10px 24px rgba(0,0,0,0.06)",
-            border: "1px solid rgba(148,163,184,0.35)",
-          }}
-        >
-          <h3
+        {/* Modal Overlay */}
+        {isModalOpen && (
+          <div
             style={{
-              marginTop: 0,
-              marginBottom: 18,
-              color: "#1a202c",
-              fontSize: 20,
-              fontWeight: 800,
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 1000,
+              padding: "20px",
             }}
+            onClick={handleCloseModal}
           >
-            {editingPost ? `Edit "${editingPost.title}"` : "Create a new post"}
-          </h3>
-
-          <form onSubmit={handlePostSubmit}>
-            {/* Title Input */}
-            <div style={{ marginBottom: 16 }}>
-              <input
-                type="text"
-                value={postTitle}
-                onChange={(e) => setPostTitle(e.target.value)}
-                placeholder="Post title..."
-                required
-                style={{
-                  width: "100%",
-                  padding: "12px 16px",
-                  border: "2px solid #e2e8f0",
-                  borderRadius: 10,
-                  fontSize: 15,
-                  backgroundColor: "#ffffff",
-                  color: "#2d3748",
-                  transition: "all 0.18s ease",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-                  boxSizing: "border-box",
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = "#006729";
-                  e.target.style.boxShadow =
-                    "0 0 0 3px rgba(0, 103, 41, 0.12)";
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = "#e2e8f0";
-                  e.target.style.boxShadow =
-                    "0 1px 3px rgba(0,0,0,0.06)";
-                }}
-              />
-            </div>
-
-            {/* Type and Modality Dropdowns */}
-            <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
-              <div style={{ flex: 1 }}>
-                <select
-                  value={postType}
-                  onChange={(e) => setPostType(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "12px 16px",
-                    border: "2px solid #e2e8f0",
-                    borderRadius: 10,
-                    fontSize: 14,
-                    fontWeight: 500,
-                    backgroundColor: "#ffffff",
-                    color: "#2d3748",
-                    cursor: "pointer",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-                    transition: "all 0.18s ease",
-                    boxSizing: "border-box",
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#006729";
-                    e.target.style.boxShadow =
-                      "0 0 0 3px rgba(0, 103, 41, 0.12)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "#e2e8f0";
-                    e.target.style.boxShadow =
-                      "0 1px 3px rgba(0,0,0,0.06)";
-                  }}
-                >
-                  <option value="post">Post</option>
-                  <option value="event">Event</option>
-                  <option value="tutor">Tutoring</option>
-                  <option value="job">Job</option>
-                  <option value="resource">Resource</option>
-                </select>
-              </div>
-
-              <div style={{ flex: 1 }}>
-                <select
-                  value={postModality}
-                  onChange={(e) => setPostModality(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "12px 16px",
-                    border: "2px solid #e2e8f0",
-                    borderRadius: 10,
-                    fontSize: 14,
-                    fontWeight: 500,
-                    backgroundColor: "#ffffff",
-                    color: "#2d3748",
-                    cursor: "pointer",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-                    transition: "all 0.18s ease",
-                    boxSizing: "border-box",
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#006729";
-                    e.target.style.boxShadow =
-                      "0 0 0 3px rgba(0, 103, 41, 0.12)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "#e2e8f0";
-                    e.target.style.boxShadow =
-                      "0 1px 3px rgba(0,0,0,0.06)";
-                  }}
-                >
-                  <option value="in-person">In-Person</option>
-                  <option value="online">Online</option>
-                  <option value="hybrid">Hybrid</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Content Textarea */}
-            <textarea
-              value={newPost}
-              onChange={(e) => setNewPost(e.target.value)}
-              placeholder="Post content..."
-              required
-              style={{
-                width: "100%",
-                minHeight: 110,
-                padding: "12px 16px",
-                border: "2px solid #e2e8f0",
-                borderRadius: 10,
-                fontSize: 14,
-                fontFamily: "inherit",
-                resize: "vertical",
-                backgroundColor: "#ffffff",
-                color: "#2d3748",
-                transition: "all 0.18s ease",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-                boxSizing: "border-box",
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = "#006729";
-                e.target.style.boxShadow =
-                  "0 0 0 3px rgba(0, 103, 41, 0.12)";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "#e2e8f0";
-                e.target.style.boxShadow =
-                  "0 1px 3px rgba(0,0,0,0.06)";
-              }}
-            />
-
             <div
               style={{
-                marginTop: 18,
-                display: "flex",
-                gap: 10,
-                justifyContent: "flex-end",
+                backgroundColor: "#fcfcf9",
+                borderRadius: 24,
+                padding: "32px 40px",
+                maxWidth: 600,
+                width: "100%",
+                maxHeight: "90vh",
+                overflow: "auto",
+                boxShadow: "0 20px 50px rgba(0,0,0,0.15)",
+                border: "1px solid rgba(0,0,0,0.05)",
               }}
+              onClick={(e) => e.stopPropagation()}
             >
-              {editingPost && (
-                <button
-                  type="button"
-                  onClick={handleCancelEdit}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 24,
+                }}
+              >
+                <h2
                   style={{
-                    padding: "10px 20px",
-                    backgroundColor: "#718096",
-                    color: "white",
+                    margin: 0,
+                    fontSize: 24,
+                    fontWeight: 800,
+                    color: "var(--text-dark)",
+                  }}
+                >
+                  {editingPost ? `Edit "${editingPost.title}"` : "Create a new post"}
+                </h2>
+                <button
+                  onClick={handleCloseModal}
+                  style={{
+                    background: "none",
                     border: "none",
-                    borderRadius: 999,
+                    fontSize: 28,
                     cursor: "pointer",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    boxShadow: "0 2px 4px rgba(0,0,0,0.10)",
+                    color: "#6b7280",
+                    padding: 0,
+                    width: 32,
+                    height: 32,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 6,
                     transition: "all 0.18s ease",
                   }}
                   onMouseEnter={(e) => {
                     (e.target as HTMLButtonElement).style.backgroundColor =
-                      "#4a5568";
-                    (e.target as HTMLButtonElement).style.transform =
-                      "translateY(-1px)";
-                    (e.target as HTMLButtonElement).style.boxShadow =
-                      "0 4px 8px rgba(0,0,0,0.15)";
+                      "#f3f4f6";
+                    (e.target as HTMLButtonElement).style.color = "#1f2937";
                   }}
                   onMouseLeave={(e) => {
                     (e.target as HTMLButtonElement).style.backgroundColor =
-                      "#718096";
-                    (e.target as HTMLButtonElement).style.transform =
-                      "translateY(0)";
-                    (e.target as HTMLButtonElement).style.boxShadow =
-                      "0 2px 4px rgba(0,0,0,0.10)";
+                      "transparent";
+                    (e.target as HTMLButtonElement).style.color = "#6b7280";
                   }}
                 >
-                  Cancel
+                  ×
                 </button>
-              )}
+              </div>
 
-              <button
-                type="submit"
-                disabled={submitting || !newPost.trim() || !postTitle.trim()}
-                style={{
-                  padding: "10px 22px",
-                  backgroundColor: submitting ? "#a0aec0" : "#006729",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 999,
-                  cursor: submitting ? "not-allowed" : "pointer",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  boxShadow: submitting
-                    ? "0 1px 2px rgba(0,0,0,0.10)"
-                    : "0 3px 7px rgba(0,0,0,0.18)",
-                  transition: "all 0.18s ease",
-                }}
-                onMouseEnter={(e) => {
-                  if (!submitting && newPost.trim() && postTitle.trim()) {
-                    (e.target as HTMLButtonElement).style.backgroundColor =
-                      "#004d20";
-                    (e.target as HTMLButtonElement).style.transform =
-                      "translateY(-1px)";
-                    (e.target as HTMLButtonButtonElement).style.boxShadow =
-                      "0 5px 10px rgba(0,0,0,0.20)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!submitting && newPost.trim() && postTitle.trim()) {
-                    (e.target as HTMLButtonElement).style.backgroundColor =
-                      "#006729";
-                    (e.target as HTMLButtonElement).style.transform =
-                      "translateY(0)";
-                    (e.target as HTMLButtonElement).style.boxShadow =
-                      "0 3px 7px rgba(0,0,0,0.18)";
-                  }
-                }}
-              >
-                {submitting
-                  ? editingPost
-                    ? "Updating..."
-                    : "Posting..."
-                  : editingPost
-                  ? "Update"
-                  : "Post"}
-              </button>
+              <form onSubmit={handlePostSubmit}>
+                {/* Title Input */}
+                <div style={{ marginBottom: 16 }}>
+                  <input
+                    type="text"
+                    value={postTitle}
+                    onChange={(e) => setPostTitle(e.target.value)}
+                    placeholder="Post title..."
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "12px 16px",
+                      border: "2px solid #e2e8f0",
+                      borderRadius: 10,
+                      fontSize: 15,
+                      backgroundColor: "#ffffff",
+                      color: "#2d3748",
+                      transition: "all 0.18s ease",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+                      boxSizing: "border-box",
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = "#006729";
+                      e.target.style.boxShadow =
+                        "0 0 0 3px rgba(0, 103, 41, 0.12)";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = "#e2e8f0";
+                      e.target.style.boxShadow =
+                        "0 1px 3px rgba(0,0,0,0.06)";
+                    }}
+                  />
+                </div>
+
+                {/* Type and Modality Dropdowns */}
+                <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
+                  <div style={{ flex: 1 }}>
+                    <select
+                      value={postType}
+                      onChange={(e) => setPostType(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "12px 16px",
+                        border: "2px solid #e2e8f0",
+                        borderRadius: 10,
+                        fontSize: 14,
+                        fontWeight: 500,
+                        backgroundColor: "#ffffff",
+                        color: "#2d3748",
+                        cursor: "pointer",
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+                        transition: "all 0.18s ease",
+                        boxSizing: "border-box",
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = "#006729";
+                        e.target.style.boxShadow =
+                          "0 0 0 3px rgba(0, 103, 41, 0.12)";
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = "#e2e8f0";
+                        e.target.style.boxShadow =
+                          "0 1px 3px rgba(0,0,0,0.06)";
+                      }}
+                    >
+                      <option value="post">Post</option>
+                      <option value="event">Event</option>
+                      <option value="tutor">Tutoring</option>
+                      <option value="job">Job</option>
+                      <option value="resource">Resource</option>
+                    </select>
+                  </div>
+
+                  <div style={{ flex: 1 }}>
+                    <select
+                      value={postModality}
+                      onChange={(e) => setPostModality(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "12px 16px",
+                        border: "2px solid #e2e8f0",
+                        borderRadius: 10,
+                        fontSize: 14,
+                        fontWeight: 500,
+                        backgroundColor: "#ffffff",
+                        color: "#2d3748",
+                        cursor: "pointer",
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+                        transition: "all 0.18s ease",
+                        boxSizing: "border-box",
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = "#006729";
+                        e.target.style.boxShadow =
+                          "0 0 0 3px rgba(0, 103, 41, 0.12)";
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = "#e2e8f0";
+                        e.target.style.boxShadow =
+                          "0 1px 3px rgba(0,0,0,0.06)";
+                      }}
+                    >
+                      <option value="in-person">In-Person</option>
+                      <option value="online">Online</option>
+                      <option value="hybrid">Hybrid</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Content Textarea */}
+                <textarea
+                  value={newPost}
+                  onChange={(e) => setNewPost(e.target.value)}
+                  placeholder="Post content..."
+                  required
+                  style={{
+                    width: "100%",
+                    minHeight: 150,
+                    padding: "12px 16px",
+                    border: "2px solid #e2e8f0",
+                    borderRadius: 10,
+                    fontSize: 14,
+                    fontFamily: "inherit",
+                    resize: "vertical",
+                    backgroundColor: "#ffffff",
+                    color: "#2d3748",
+                    transition: "all 0.18s ease",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+                    boxSizing: "border-box",
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "#006729";
+                    e.target.style.boxShadow =
+                      "0 0 0 3px rgba(0, 103, 41, 0.12)";
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = "#e2e8f0";
+                    e.target.style.boxShadow =
+                      "0 1px 3px rgba(0,0,0,0.06)";
+                  }}
+                />
+
+                <div
+                  style={{
+                    marginTop: 24,
+                    display: "flex",
+                    gap: 10,
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={handleCancelEdit}
+                    style={{
+                      padding: "10px 20px",
+                      backgroundColor: "#718096",
+                      color: "white",
+                      border: "none",
+                      borderRadius: 999,
+                      cursor: "pointer",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.10)",
+                      transition: "all 0.18s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.target as HTMLButtonElement).style.backgroundColor =
+                        "#4a5568";
+                      (e.target as HTMLButtonElement).style.transform =
+                        "translateY(-1px)";
+                      (e.target as HTMLButtonElement).style.boxShadow =
+                        "0 4px 8px rgba(0,0,0,0.15)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.target as HTMLButtonElement).style.backgroundColor =
+                        "#718096";
+                      (e.target as HTMLButtonElement).style.transform =
+                        "translateY(0)";
+                      (e.target as HTMLButtonElement).style.boxShadow =
+                        "0 2px 4px rgba(0,0,0,0.10)";
+                    }}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={submitting || !newPost.trim() || !postTitle.trim()}
+                    style={{
+                      padding: "10px 22px",
+                      backgroundColor: submitting ? "#a0aec0" : "#006729",
+                      color: "white",
+                      border: "none",
+                      borderRadius: 999,
+                      cursor: submitting ? "not-allowed" : "pointer",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      boxShadow: submitting
+                        ? "0 1px 2px rgba(0,0,0,0.10)"
+                        : "0 3px 7px rgba(0,0,0,0.18)",
+                      transition: "all 0.18s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!submitting && newPost.trim() && postTitle.trim()) {
+                        (e.target as HTMLButtonElement).style.backgroundColor =
+                          "#004d20";
+                        (e.target as HTMLButtonElement).style.transform =
+                          "translateY(-1px)";
+                        (e.target as HTMLButtonElement).style.boxShadow =
+                          "0 5px 10px rgba(0,0,0,0.20)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!submitting && newPost.trim() && postTitle.trim()) {
+                        (e.target as HTMLButtonElement).style.backgroundColor =
+                          "#006729";
+                        (e.target as HTMLButtonElement).style.transform =
+                          "translateY(0)";
+                        (e.target as HTMLButtonElement).style.boxShadow =
+                          "0 3px 7px rgba(0,0,0,0.18)";
+                      }
+                    }}
+                  >
+                    {submitting
+                      ? editingPost
+                        ? "Updating..."
+                        : "Posting..."
+                      : editingPost
+                      ? "Update"
+                      : "Post"}
+                  </button>
+                </div>
+              </form>
             </div>
-          </form>
-        </section>
+          </div>
+        )}
 
         {/* Listings feed */}
         <section>

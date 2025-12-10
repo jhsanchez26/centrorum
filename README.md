@@ -169,7 +169,7 @@ npm test
 
 * Implement notification and calendar integration
 * Add “Follow” functionality and enhanced organization pages
-* Improve performance through query optimization and caching
+* Improve performance through query optimization, caching, and pagination
 * Conduct full accessibility audit
 * Develop a fully optimized mobile browser experience
 * Explore cloud deployment (Heroku, GCP, or Vercel)
@@ -183,6 +183,12 @@ npm test
 * **Frances Sepúlveda Alvarado** — Frontend Development · Accessibility · Usability Testing
 
 All members contribute to design, documentation, testing, and final presentation deliverables.
+
+---
+
+## Final Report Link
+
+* https://docs.google.com/document/d/12GcUoFiKb-hBahYz_YLIQX4D4jjoYJ-ERQqQN8Bmb0w/edit?usp=sharing
 
 ---
 
